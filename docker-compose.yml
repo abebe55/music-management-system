@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: music_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: music_management
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - music_network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: music_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/music_management
+    ports:
+      - '5000:5000'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - music_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  music_network:
+    driver: bridge

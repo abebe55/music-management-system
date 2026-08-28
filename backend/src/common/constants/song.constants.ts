@@ -1,0 +1,30 @@
+export const SongConstants = {
+  TITLE_MAX_LENGTH: 200,
+  ARTIST_MAX_LENGTH: 150,
+  ALBUM_MAX_LENGTH: 200,
+  GENRES: [
+    'Pop',
+    'Rock',
+    'Hip Hop',
+    'R&B',
+    'Jazz',
+    'Classical',
+    'Country',
+    'Electronic',
+    'Alternative',
+    'Indie',
+    'Metal',
+    'Blues',
+    'Reggae',
+    'Soul',
+    'Latin',
+    'Folk',
+    'Punk',
+    'Disco',
+    'Other',
+  ] as const,
+  DEFAULT_PAGE_SIZE: 8,
+  MAX_PAGE_SIZE: 100,
+} as const;
+
+export type Genre = (typeof SongConstants.GENRES)[number];

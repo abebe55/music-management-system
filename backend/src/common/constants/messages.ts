@@ -1,0 +1,39 @@
+export const Messages = {
+  auth: {
+    LOGIN_SUCCESS: 'Login successful',
+    LOGOUT_SUCCESS: 'Logged out successfully',
+    OTP_SENT: 'OTP code sent to your email',
+    OTP_VERIFIED: 'OTP verified successfully',
+    PASSWORD_RESET: 'Password reset successfully',
+    PASSWORD_CHANGED: 'Password changed successfully',
+    INVALID_CREDENTIALS: 'Invalid email or password',
+    INVALID_OTP: 'Invalid or expired OTP code',
+    OTP_MAX_ATTEMPTS: 'Maximum OTP attempts exceeded. Please request a new code',
+    TOKEN_EXPIRED: 'Session expired. Please login again',
+    TOKEN_INVALID: 'Invalid authentication token',
+    UNAUTHORIZED: 'Authentication required',
+    EMAIL_NOT_FOUND: 'No account found with that email address',
+    ACCOUNT_LOCKED: 'Account temporarily locked. Please try again later',
+  },
+  songs: {
+    CREATED: 'Song created successfully',
+    UPDATED: 'Song updated successfully',
+    DELETED: 'Song deleted successfully',
+    NOT_FOUND: 'Song not found',
+    FETCHED: 'Songs retrieved successfully',
+    FETCH_ONE: 'Song retrieved successfully',
+  },
+  statistics: {
+    FETCHED: 'Statistics retrieved successfully',
+  },
+  validation: {
+    REQUIRED: 'This field is required',
+    INVALID_EMAIL: 'Invalid email format',
+    PASSWORD_MIN: 'Password must be at least 8 characters',
+    PASSWORD_MISMATCH: 'Passwords do not match',
+  },
+  server: {
+    INTERNAL_ERROR: 'Internal server error',
+    NOT_FOUND: 'Resource not found',
+  },
+} as const;
