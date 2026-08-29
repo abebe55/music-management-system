@@ -56,4 +56,8 @@ export interface SongsState {
   isModalOpen: boolean;
   modalMode: 'create' | 'edit' | null;
   deleteConfirmId: string | null;
+  // Dynamic filter options
+  allArtists: string[];
+  allAlbums: string[];
+  filterOptionsLoaded: boolean;
 }

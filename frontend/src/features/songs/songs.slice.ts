@@ -2,7 +2,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Song, SongsState, SongQuery, CreateSongRequest, UpdateSongRequest } from '../../types/song';
 import { PaginationMeta } from '../../types/api';
 
-const initialState: SongsState = {
+// Extend state to include filter option lists
+interface ExtendedSongsState extends SongsState {
+  allArtists: string[];
+  allAlbums: string[];
+  filterOptionsLoaded: boolean;
+}
+
+const initialState: ExtendedSongsState = {
   items: [],
   total: 0,
   page: 1,
@@ -17,6 +24,9 @@ const initialState: SongsState = {
   isModalOpen: false,
   modalMode: null,
   deleteConfirmId: null,
+  allArtists: [],
+  allAlbums: [],
+  filterOptionsLoaded: false,
 };
 
 const songsSlice = createSlice({
@@ -48,6 +58,18 @@ const songsSlice = createSlice({
       state.error = action.payload;
     },
 
+    // Filter options (artists + albums for dropdowns)
+    fetchFilterOptionsRequest: (state) => {
+      // silently loads options — no loading spinner needed
+      state.filterOptionsLoaded = false;
+    },
+    fetchFilterOptionsSuccess: (state, action: PayloadAction<Song[]>) => {
+      const songs = action.payload;
+      state.allArtists = [...new Set(songs.map((s) => s.artist))].sort();
+      state.allAlbums = [...new Set(songs.map((s) => s.album))].sort();
+      state.filterOptionsLoaded = true;
+    },
+
     // Create
     createSongRequest: (state, _action: PayloadAction<CreateSongRequest>) => {
       state.isLoading = true;
@@ -57,10 +79,16 @@ const songsSlice = createSlice({
       state.isLoading = false;
       state.isModalOpen = false;
       state.modalMode = null;
-      // Prepend to list if on page 1
       if (state.page === 1) {
         state.items = [action.payload, ...state.items.slice(0, state.limit - 1)];
         state.total += 1;
+      }
+      // Keep artist/album options fresh
+      if (!state.allArtists.includes(action.payload.artist)) {
+        state.allArtists = [...state.allArtists, action.payload.artist].sort();
+      }
+      if (!state.allAlbums.includes(action.payload.album)) {
+        state.allAlbums = [...state.allAlbums, action.payload.album].sort();
       }
     },
     createSongFailure: (state, action: PayloadAction<string>) => {

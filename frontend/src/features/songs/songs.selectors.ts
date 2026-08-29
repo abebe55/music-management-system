@@ -9,6 +9,8 @@ export const selectSelectedSong = (state: RootState) => state.songs.selectedSong
 export const selectIsModalOpen = (state: RootState) => state.songs.isModalOpen;
 export const selectModalMode = (state: RootState) => state.songs.modalMode;
 export const selectDeleteConfirmId = (state: RootState) => state.songs.deleteConfirmId;
+export const selectAllArtists = (state: RootState) => state.songs.allArtists;
+export const selectAllAlbums = (state: RootState) => state.songs.allAlbums;
 export const selectSongsPagination = (state: RootState) => ({
   total: state.songs.total,
   page: state.songs.page,

@@ -81,7 +81,7 @@ export const GenreStatistics: React.FC<GenreStatisticsProps> = ({ data }) => {
   const circumference = 2 * Math.PI * radius;
 
   let cumulative = 0;
-  const segments = top.map((d, i) => {
+  const segments = top.map((d, _i) => {
     const pct = total > 0 ? d.count / total : 0;
     const dashArray = pct * circumference;
     const dashOffset = circumference - cumulative * circumference;
@@ -97,7 +97,7 @@ export const GenreStatistics: React.FC<GenreStatisticsProps> = ({ data }) => {
         <DonutWrapper>
           <svg width="120" height="120" viewBox="0 0 120 120">
             <circle cx={cx} cy={cy} r={radius} fill="none" stroke={theme.colors.borderLight} strokeWidth={strokeWidth} />
-            {segments.map((seg, i) => (
+            {segments.map((seg, _i) => (
               <circle
                 key={seg.genre}
                 cx={cx} cy={cy} r={radius}

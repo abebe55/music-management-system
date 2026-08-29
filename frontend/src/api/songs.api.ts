@@ -17,6 +17,10 @@ export const songsApi = {
 
   deleteSong: (id: string) =>
     client.delete<ApiResponse<null>>(`/songs/${id}`),
+
+  /** Fetch a large unfiltered page to populate filter dropdowns */
+  getAllForFilters: () =>
+    client.get<ApiResponse<Song[]>>('/songs', { params: { limit: 500, sort: 'artist', order: 'asc' } }),
 };
 
 export type SongsListResponse = {

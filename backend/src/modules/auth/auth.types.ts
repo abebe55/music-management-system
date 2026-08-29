@@ -1,7 +1,7 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface IUser extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   email: string;
   password: string;
   createdAt: Date;
@@ -9,7 +9,7 @@ export interface IUser extends Document {
 }
 
 export interface IPasswordReset extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   userId: string;
   email: string;
   otp: string;

@@ -5,7 +5,7 @@ import { songsActions } from '../../features/songs/songs.slice';
 import {
   selectSongItems, selectSongsLoading, selectSongsError,
   selectSongsFilters, selectSongsPagination, selectIsModalOpen,
-  selectModalMode, selectSelectedSong,
+  selectModalMode, selectSelectedSong, selectAllArtists, selectAllAlbums,
 } from '../../features/songs/songs.selectors';
 import { MainLayout } from '../../layouts/MainLayout/MainLayout';
 import { SongTable } from '../../components/songs/SongTable/SongTable';
@@ -73,32 +73,35 @@ const SongsPage: React.FC = () => {
   const isModalOpen = useAppSelector(selectIsModalOpen);
   const modalMode = useAppSelector(selectModalMode);
   const selectedSong = useAppSelector(selectSelectedSong);
+  const allArtists = useAppSelector(selectAllArtists);
+  const allAlbums = useAppSelector(selectAllAlbums);
 
-  // Fetch songs when filters change
+  // Load songs when filters change
   useEffect(() => {
     dispatch(songsActions.fetchSongsRequest(filters));
   }, [dispatch, filters]);
+
+  // Load filter options (artists + albums) once on mount
+  useEffect(() => {
+    dispatch(songsActions.fetchFilterOptionsRequest());
+  }, [dispatch]);
 
   const handleSearchChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ search: v })),
     [dispatch],
   );
-
   const handleGenreChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ genre: v })),
     [dispatch],
   );
-
   const handleArtistChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ artist: v })),
     [dispatch],
   );
-
   const handleAlbumChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ album: v })),
     [dispatch],
   );
-
   const handleClearFilters = useCallback(() => {
     dispatch(songsActions.setFilters({ search: '', genre: '', artist: '', album: '' }));
   }, [dispatch]);
@@ -145,6 +148,8 @@ const SongsPage: React.FC = () => {
             genre={filters.genre ?? ''}
             artist={filters.artist ?? ''}
             album={filters.album ?? ''}
+            artists={allArtists}
+            albums={allAlbums}
             onSearchChange={handleSearchChange}
             onGenreChange={handleGenreChange}
             onArtistChange={handleArtistChange}

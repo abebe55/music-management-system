@@ -24,6 +24,18 @@ function* fetchSongsSaga(action: ReturnType<typeof songsActions.fetchSongsReques
   }
 }
 
+function* fetchFilterOptionsSaga() {
+  try {
+    const response: AxiosResponse<ApiResponse<Song[]>> = yield call(
+      songsApi.getAllForFilters,
+    );
+    yield put(songsActions.fetchFilterOptionsSuccess(response.data.data ?? []));
+  } catch (_error) {
+    // Filter options failing is non-critical — swallow silently
+    yield put(songsActions.fetchFilterOptionsSuccess([]));
+  }
+}
+
 function* createSongSaga(action: ReturnType<typeof songsActions.createSongRequest>) {
   try {
     const response: AxiosResponse<ApiResponse<Song>> = yield call(
@@ -60,6 +72,7 @@ function* deleteSongSaga(action: ReturnType<typeof songsActions.deleteSongReques
 
 export function* songsSaga() {
   yield takeLatest(songsActions.fetchSongsRequest.type, fetchSongsSaga);
+  yield takeLatest(songsActions.fetchFilterOptionsRequest.type, fetchFilterOptionsSaga);
   yield takeLatest(songsActions.createSongRequest.type, createSongSaga);
   yield takeLatest(songsActions.updateSongRequest.type, updateSongSaga);
   yield takeLatest(songsActions.deleteSongRequest.type, deleteSongSaga);
