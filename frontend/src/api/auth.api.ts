@@ -31,6 +31,9 @@ export const authApi = {
   changePassword: (data: ChangePasswordRequest) =>
     client.post<ApiResponse<null>>('/auth/change-password', data),
 
+  updateEmail: (data: { newEmail: string; password: string }) =>
+    client.post<ApiResponse<{ email: string }>>('/auth/update-email', data),
+
   getMe: () =>
     client.get<ApiResponse<{ id: string; email: string }>>('/auth/me'),
 

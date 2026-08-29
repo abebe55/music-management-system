@@ -9,6 +9,7 @@ import {
   verifyOtp,
   resetPassword,
   changePassword,
+  updateEmail,
   getMe,
   logout,
   refreshToken,
@@ -19,6 +20,7 @@ import {
   verifyOtpSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  updateEmailSchema,
 } from './auth.validation';
 
 const router = Router();
@@ -34,5 +36,6 @@ router.post('/refresh-token', asyncHandler(refreshToken));
 router.get('/me', authenticate, asyncHandler(getMe));
 router.post('/logout', authenticate, asyncHandler(logout));
 router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(changePassword));
+router.post('/update-email', authenticate, validate(updateEmailSchema), asyncHandler(updateEmail));
 
 export default router;

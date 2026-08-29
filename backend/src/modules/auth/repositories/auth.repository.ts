@@ -23,6 +23,10 @@ export class AuthRepository {
     await UserModel.findByIdAndUpdate(userId, { password: hashedPassword });
   }
 
+  async updateEmail(userId: string, newEmail: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, { email: newEmail.toLowerCase() });
+  }
+
   async existsByEmail(email: string): Promise<boolean> {
     const count = await UserModel.countDocuments({ email: email.toLowerCase() });
     return count > 0;

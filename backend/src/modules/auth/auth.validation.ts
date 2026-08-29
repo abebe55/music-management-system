@@ -50,3 +50,11 @@ export const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
   newPassword: passwordSchema,
 });
+
+export const updateEmailSchema = Joi.object({
+  newEmail: emailSchema,
+  password: Joi.string().required().messages({
+    'any.required': 'Password is required to change email',
+    'string.empty': 'Password is required to change email',
+  }),
+});

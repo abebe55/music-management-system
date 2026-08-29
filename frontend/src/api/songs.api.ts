@@ -20,7 +20,7 @@ export const songsApi = {
 
   /** Fetch a large unfiltered page to populate filter dropdowns */
   getAllForFilters: () =>
-    client.get<ApiResponse<Song[]>>('/songs', { params: { limit: 500, sort: 'artist', order: 'asc' } }),
+    client.get<ApiResponse<Song[]>>('/songs', { params: { limit: 100, sort: 'title', order: 'asc' } }),
 };
 
 export type SongsListResponse = {

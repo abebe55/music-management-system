@@ -107,6 +107,25 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
+    // Update email
+    updateEmailRequest: (
+      state,
+      _action: PayloadAction<{ newEmail: string; password: string }>,
+    ) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    updateEmailSuccess: (state, action: PayloadAction<{ email: string }>) => {
+      state.isLoading = false;
+      if (state.user) {
+        state.user = { ...state.user, email: action.payload.email };
+      }
+    },
+    updateEmailFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
+
     // UI helpers
     clearError: (state) => { state.error = null; },
     resetForgotPasswordFlow: (state) => {
