@@ -40,7 +40,7 @@ const ForgotPasswordPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const step = useAppSelector(selectForgotPasswordStep);
   // Carry otp across verify → reset steps via local state
-  const [verifiedOtp, setVerifiedOtp] = useState('');
+  const [verifiedOtp, _setVerifiedOtp] = useState('');
 
   const { title, subtitle } = TITLES[step] ?? TITLES.email;
 

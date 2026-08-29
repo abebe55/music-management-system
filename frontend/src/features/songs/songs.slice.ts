@@ -17,17 +17,22 @@ const initialState: SongsState = {
   isModalOpen: false,
   modalMode: null,
   deleteConfirmId: null,
+  allArtists: [],
+  allAlbums: [],
+  filterOptionsLoaded: false,
 };
 
 const songsSlice = createSlice({
   name: 'songs',
   initialState,
   reducers: {
-    // Fetch list
-    fetchSongsRequest: (state, action: PayloadAction<SongQuery>) => {
+    // ── Fetch list ──────────────────────────────────────────
+    // NOTE: does NOT write back to state.filters — that would create a new
+    // object reference and re-trigger any useEffect([filters]) → infinite loop.
+    // Filters are only updated via setFilters/handlePageChange.
+    fetchSongsRequest: (state, _action: PayloadAction<SongQuery>) => {
       state.isLoading = true;
       state.error = null;
-      state.filters = { ...state.filters, ...action.payload };
     },
     fetchSongsSuccess: (
       state,
@@ -48,7 +53,18 @@ const songsSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Create
+    // ── Filter dropdown options ─────────────────────────────
+    fetchFilterOptionsRequest: (state) => {
+      state.filterOptionsLoaded = false;
+    },
+    fetchFilterOptionsSuccess: (state, action: PayloadAction<Song[]>) => {
+      const songs = action.payload;
+      state.allArtists = [...new Set(songs.map((s) => s.artist))].sort();
+      state.allAlbums = [...new Set(songs.map((s) => s.album))].sort();
+      state.filterOptionsLoaded = true;
+    },
+
+    // ── Create ──────────────────────────────────────────────
     createSongRequest: (state, _action: PayloadAction<CreateSongRequest>) => {
       state.isLoading = true;
       state.error = null;
@@ -57,10 +73,17 @@ const songsSlice = createSlice({
       state.isLoading = false;
       state.isModalOpen = false;
       state.modalMode = null;
-      // Prepend to list if on page 1
+      // Optimistic prepend on page 1
       if (state.page === 1) {
         state.items = [action.payload, ...state.items.slice(0, state.limit - 1)];
-        state.total += 1;
+      }
+      state.total += 1;
+      // Keep dropdown options up-to-date
+      if (!state.allArtists.includes(action.payload.artist)) {
+        state.allArtists = [...state.allArtists, action.payload.artist].sort();
+      }
+      if (!state.allAlbums.includes(action.payload.album)) {
+        state.allAlbums = [...state.allAlbums, action.payload.album].sort();
       }
     },
     createSongFailure: (state, action: PayloadAction<string>) => {
@@ -68,7 +91,7 @@ const songsSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Update
+    // ── Update ──────────────────────────────────────────────
     updateSongRequest: (
       state,
       _action: PayloadAction<{ id: string; data: UpdateSongRequest }>,
@@ -90,7 +113,7 @@ const songsSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Delete
+    // ── Delete ──────────────────────────────────────────────
     deleteSongRequest: (state, _action: PayloadAction<string>) => {
       state.isLoading = true;
       state.error = null;
@@ -106,7 +129,7 @@ const songsSlice = createSlice({
       state.error = action.payload;
     },
 
-    // UI
+    // ── UI helpers ──────────────────────────────────────────
     openCreateModal: (state) => {
       state.isModalOpen = true;
       state.modalMode = 'create';
@@ -129,9 +152,27 @@ const songsSlice = createSlice({
       state.deleteConfirmId = action.payload;
     },
     setFilters: (state, action: PayloadAction<Partial<SongQuery>>) => {
-      state.filters = { ...state.filters, ...action.payload, page: 1 };
+      const payload = action.payload;
+      const keys = Object.keys(payload);
+      // If only page is being changed, don't reset to 1
+      // If only limit is being changed, reset page to 1
+      // For all other filter changes (search, genre, etc.), reset page to 1
+      const isPageOnly = keys.length === 1 && 'page' in payload;
+      const isLimitOnly = keys.length === 1 && 'limit' in payload;
+      const isLimitWithPage = 'limit' in payload && 'page' in payload;
+
+      state.filters = {
+        ...state.filters,
+        ...payload,
+        page: isPageOnly ? (payload.page ?? 1)
+          : isLimitOnly ? 1
+          : isLimitWithPage ? (payload.page ?? 1)
+          : 1,
+      };
     },
-    clearError: (state) => { state.error = null; },
+    clearError: (state) => {
+      state.error = null;
+    },
   },
 });
 

@@ -9,15 +9,24 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   coverageDirectory: 'coverage',
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/server.ts'],
-  setupFilesAfterFramework: [],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/server.ts',
+    '!src/database/seed.ts',
+  ],
   testTimeout: 30000,
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        strict: false,
+  // ts-jest config moved out of deprecated `globals`
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          strict: false,
+          esModuleInterop: true,
+        },
       },
-    },
+    ],
   },
 };
 

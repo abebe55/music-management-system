@@ -1,8 +1,8 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Genre } from '../../common/constants/song.constants';
 
 export interface ISong extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   title: string;
   artist: string;
   album: string;

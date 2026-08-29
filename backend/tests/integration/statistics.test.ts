@@ -5,20 +5,18 @@ import { UserModel } from '../../src/modules/auth/models/user.model';
 import { SongModel } from '../../src/modules/songs/song.model';
 import { hashPassword } from '../../src/common/utils/password';
 import { signAccessToken } from '../../src/common/utils/token';
-
-const MONGO_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/music_test';
+import { connectTestDb, disconnectTestDb } from '../helpers/db';
 
 describe('Statistics API — Integration', () => {
   let authToken: string;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(MONGO_URI);
-    }
+    await connectTestDb('statistics');
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.connection.db?.dropDatabase();
+    await disconnectTestDb();
   });
 
   beforeEach(async () => {
@@ -26,8 +24,8 @@ describe('Statistics API — Integration', () => {
     await UserModel.deleteMany({});
 
     const hashed = await hashPassword('Test@1234');
-    const user = await UserModel.create({ email: 'test@example.com', password: hashed });
-    authToken = signAccessToken({ userId: String(user._id), email: 'test@example.com' });
+    const user = await UserModel.create({ email: 'test@statistics.com', password: hashed });
+    authToken = signAccessToken({ userId: String(user._id), email: 'test@statistics.com' });
 
     await SongModel.insertMany([
       { title: 'Song A', artist: 'Artist 1', album: 'Album X', genre: 'Pop' },

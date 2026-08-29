@@ -1,11 +1,11 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import styled from '@emotion/styled';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { songsActions } from '../../features/songs/songs.slice';
 import {
   selectSongItems, selectSongsLoading, selectSongsError,
   selectSongsFilters, selectSongsPagination, selectIsModalOpen,
-  selectModalMode, selectSelectedSong,
+  selectModalMode, selectSelectedSong, selectAllArtists, selectAllAlbums,
 } from '../../features/songs/songs.selectors';
 import { MainLayout } from '../../layouts/MainLayout/MainLayout';
 import { SongTable } from '../../components/songs/SongTable/SongTable';
@@ -19,7 +19,7 @@ import { Spinner } from '../../components/common/Spinner/Spinner';
 import { EmptyState } from '../../components/common/EmptyState/EmptyState';
 import { ErrorState } from '../../components/common/ErrorState/ErrorState';
 import { theme } from '../../styles/theme';
-import { Song, CreateSongRequest, UpdateSongRequest } from '../../types/song';
+import { Song, CreateSongRequest, UpdateSongRequest, SongQuery } from '../../types/song';
 
 const PageHeader = styled.div`
   display: flex;
@@ -73,51 +73,91 @@ const SongsPage: React.FC = () => {
   const isModalOpen = useAppSelector(selectIsModalOpen);
   const modalMode = useAppSelector(selectModalMode);
   const selectedSong = useAppSelector(selectSelectedSong);
+  const allArtists = useAppSelector(selectAllArtists);
+  const allAlbums = useAppSelector(selectAllAlbums);
 
-  // Fetch songs when filters change
+  // ── Serialize filters to a stable string so we only fetch when
+  //    the actual filter *values* change, not the object reference.
+  //    fetchSongsRequest overwrites state.filters which would create
+  //    a new object reference on every dispatch → infinite loop.
+  const filtersKey = JSON.stringify({
+    page: filters.page,
+    limit: filters.limit,
+    sort: filters.sort,
+    order: filters.order,
+    search: filters.search ?? '',
+    genre: filters.genre ?? '',
+    artist: filters.artist ?? '',
+    album: filters.album ?? '',
+  });
+
+  // Track the previous key to avoid dispatching when the reducer
+  // echoes back the same values in a new object.
+  const prevFiltersKeyRef = useRef<string>('');
+
   useEffect(() => {
-    dispatch(songsActions.fetchSongsRequest(filters));
-  }, [dispatch, filters]);
+    if (filtersKey === prevFiltersKeyRef.current) return;
+    prevFiltersKeyRef.current = filtersKey;
+    // Parse back so we pass a clean object (not the serialized string)
+    dispatch(songsActions.fetchSongsRequest(JSON.parse(filtersKey) as SongQuery));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersKey]);
+
+  // Load filter dropdown options once on mount
+  useEffect(() => {
+    dispatch(songsActions.fetchFilterOptionsRequest());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearchChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ search: v })),
     [dispatch],
   );
-
   const handleGenreChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ genre: v })),
     [dispatch],
   );
-
   const handleArtistChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ artist: v })),
     [dispatch],
   );
-
   const handleAlbumChange = useCallback(
     (v: string) => dispatch(songsActions.setFilters({ album: v })),
     [dispatch],
   );
-
   const handleClearFilters = useCallback(() => {
     dispatch(songsActions.setFilters({ search: '', genre: '', artist: '', album: '' }));
   }, [dispatch]);
 
-  const handlePageChange = (page: number) => {
-    dispatch(songsActions.fetchSongsRequest({ ...filters, page }));
-  };
+  const handlePageChange = useCallback((page: number) => {
+    dispatch(songsActions.setFilters({ page }));
+  }, [dispatch]);
 
-  const handleEdit = (song: Song) => dispatch(songsActions.openEditModal(song));
-  const handleDelete = (id: string) => dispatch(songsActions.setDeleteConfirmId(id));
-  const handleCloseModal = () => dispatch(songsActions.closeModal());
+  const handleLimitChange = useCallback((limit: number) => {
+    // Reset to page 1 when rows-per-page changes
+    dispatch(songsActions.setFilters({ limit, page: 1 }));
+  }, [dispatch]);
 
-  const handleSubmit = (data: CreateSongRequest | UpdateSongRequest) => {
+  const handleEdit = useCallback(
+    (song: Song) => dispatch(songsActions.openEditModal(song)),
+    [dispatch],
+  );
+  const handleDelete = useCallback(
+    (id: string) => dispatch(songsActions.setDeleteConfirmId(id)),
+    [dispatch],
+  );
+  const handleCloseModal = useCallback(
+    () => dispatch(songsActions.closeModal()),
+    [dispatch],
+  );
+
+  const handleSubmit = useCallback((data: CreateSongRequest | UpdateSongRequest) => {
     if (modalMode === 'create') {
       dispatch(songsActions.createSongRequest(data as CreateSongRequest));
     } else if (modalMode === 'edit' && selectedSong) {
       dispatch(songsActions.updateSongRequest({ id: selectedSong.id, data }));
     }
-  };
+  }, [dispatch, modalMode, selectedSong]);
 
   return (
     <MainLayout>
@@ -145,6 +185,8 @@ const SongsPage: React.FC = () => {
             genre={filters.genre ?? ''}
             artist={filters.artist ?? ''}
             album={filters.album ?? ''}
+            artists={allArtists}
+            albums={allAlbums}
             onSearchChange={handleSearchChange}
             onGenreChange={handleGenreChange}
             onArtistChange={handleArtistChange}
@@ -159,7 +201,7 @@ const SongsPage: React.FC = () => {
           {!isLoading && error && (
             <ErrorState
               message={error}
-              onRetry={() => dispatch(songsActions.fetchSongsRequest(filters))}
+              onRetry={() => dispatch(songsActions.fetchSongsRequest(JSON.parse(filtersKey) as SongQuery))}
             />
           )}
 
@@ -194,6 +236,7 @@ const SongsPage: React.FC = () => {
               total={pagination.total}
               limit={pagination.limit}
               onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
             />
           </CardFooter>
         )}

@@ -74,25 +74,38 @@ export class AuthService {
 
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
     const user = await this.authRepo.findById(userId);
-    if (!user) {
-      throw AppError.notFound('User not found');
-    }
+    if (!user) throw AppError.notFound('User not found');
 
-    // Reload with password
     const userWithPassword = await this.authRepo.findByEmail(user.email, true);
-    if (!userWithPassword) {
-      throw AppError.notFound('User not found');
-    }
+    if (!userWithPassword) throw AppError.notFound('User not found');
 
     const isMatch = await comparePassword(dto.currentPassword, userWithPassword.password);
     if (!isMatch) {
-      throw AppError.unauthorized(
-        'Current password is incorrect',
-        ErrorCodes.INVALID_CREDENTIALS,
-      );
+      throw AppError.unauthorized('Current password is incorrect', ErrorCodes.INVALID_CREDENTIALS);
     }
 
     const hashed = await hashPassword(dto.newPassword);
     await this.authRepo.updatePassword(userId, hashed);
+  }
+
+  async updateEmail(userId: string, dto: { newEmail: string; password: string }): Promise<{ email: string }> {
+    const user = await this.authRepo.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    const userWithPassword = await this.authRepo.findByEmail(user.email, true);
+    if (!userWithPassword) throw AppError.notFound('User not found');
+
+    const isMatch = await comparePassword(dto.password, userWithPassword.password);
+    if (!isMatch) {
+      throw AppError.unauthorized('Password is incorrect', ErrorCodes.INVALID_CREDENTIALS);
+    }
+
+    const emailTaken = await this.authRepo.existsByEmail(dto.newEmail);
+    if (emailTaken) {
+      throw AppError.conflict('That email address is already in use');
+    }
+
+    await this.authRepo.updateEmail(userId, dto.newEmail);
+    return { email: dto.newEmail.toLowerCase() };
   }
 }

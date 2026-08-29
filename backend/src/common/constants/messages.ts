@@ -6,6 +6,7 @@ export const Messages = {
     OTP_VERIFIED: 'OTP verified successfully',
     PASSWORD_RESET: 'Password reset successfully',
     PASSWORD_CHANGED: 'Password changed successfully',
+    EMAIL_UPDATED: 'Email address updated successfully',
     INVALID_CREDENTIALS: 'Invalid email or password',
     INVALID_OTP: 'Invalid or expired OTP code',
     OTP_MAX_ATTEMPTS: 'Maximum OTP attempts exceeded. Please request a new code',

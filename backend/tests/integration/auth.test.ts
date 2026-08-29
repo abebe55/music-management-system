@@ -3,18 +3,16 @@ import mongoose from 'mongoose';
 import app from '../../src/app';
 import { UserModel } from '../../src/modules/auth/models/user.model';
 import { hashPassword } from '../../src/common/utils/password';
-
-const MONGO_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/music_test';
+import { connectTestDb, disconnectTestDb } from '../helpers/db';
 
 describe('Auth API — Integration', () => {
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(MONGO_URI);
-    }
+    await connectTestDb('auth');
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.connection.db?.dropDatabase();
+    await disconnectTestDb();
   });
 
   beforeEach(async () => {
@@ -103,7 +101,6 @@ describe('Auth API — Integration', () => {
       const hashed = await hashPassword('Test@1234');
       await UserModel.create({ email: 'user@example.com', password: hashed });
 
-      // Login first
       const loginRes = await request(app)
         .post('/api/v1/auth/login')
         .send({ email: 'user@example.com', password: 'Test@1234' });

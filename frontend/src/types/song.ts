@@ -41,6 +41,7 @@ export interface SongQuery {
   album?: string;
 }
 
+// Single canonical state shape — includes everything the slice needs
 export interface SongsState {
   items: Song[];
   total: number;
@@ -56,4 +57,8 @@ export interface SongsState {
   isModalOpen: boolean;
   modalMode: 'create' | 'edit' | null;
   deleteConfirmId: string | null;
+  // Dynamic dropdown options
+  allArtists: string[];
+  allAlbums: string[];
+  filterOptionsLoaded: boolean;
 }

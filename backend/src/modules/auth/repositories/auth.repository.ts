@@ -16,11 +16,15 @@ export class AuthRepository {
 
   async create(email: string, hashedPassword: string): Promise<IUser> {
     const user = await UserModel.create({ email: email.toLowerCase(), password: hashedPassword });
-    return user.toObject() as IUser;
+    return user.toJSON() as unknown as IUser;
   }
 
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, { password: hashedPassword });
+  }
+
+  async updateEmail(userId: string, newEmail: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, { email: newEmail.toLowerCase() });
   }
 
   async existsByEmail(email: string): Promise<boolean> {

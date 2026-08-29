@@ -33,6 +33,11 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UpdateEmailRequest {
+  newEmail: string;
+  password: string;
+}
+
 export interface AuthState {
   user: User | null;
   tokens: AuthTokens | null;

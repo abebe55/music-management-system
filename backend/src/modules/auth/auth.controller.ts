@@ -47,6 +47,12 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   sendSuccess(res, { id: req.userId, email: req.user?.email }, 'Profile retrieved');
 }
 
+export async function updateEmail(req: Request, res: Response): Promise<void> {
+  const dto = req.body as { newEmail: string; password: string };
+  const result = await authService.updateEmail(req.userId!, dto);
+  sendSuccess(res, result, 'Email updated successfully');
+}
+
 export async function logout(_req: Request, res: Response): Promise<void> {
   // Stateless JWT — client discards token; server-side is a no-op
   sendSuccess(res, null, Messages.auth.LOGOUT_SUCCESS);

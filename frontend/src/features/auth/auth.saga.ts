@@ -68,6 +68,22 @@ function* changePasswordSaga(action: ReturnType<typeof authActions.changePasswor
   }
 }
 
+function* updateEmailSaga(action: ReturnType<typeof authActions.updateEmailRequest>) {
+  try {
+    const response: AxiosResponse<ApiResponse<{ email: string }>> = yield call(
+      authApi.updateEmail,
+      action.payload,
+    );
+    const newEmail = response.data.data!.email;
+    // Persist updated user to localStorage
+    const stored = storage.getUser<{ id: string; email: string }>();
+    if (stored) storage.setUser({ ...stored, email: newEmail });
+    yield put(authActions.updateEmailSuccess({ email: newEmail }));
+  } catch (error) {
+    yield put(authActions.updateEmailFailure(extractErrorMessage(error)));
+  }
+}
+
 export function* authSaga() {
   yield takeLatest(authActions.loginRequest.type, loginSaga);
   yield takeLatest(authActions.logoutRequest.type, logoutSaga);
@@ -75,4 +91,5 @@ export function* authSaga() {
   yield takeLatest(authActions.verifyOtpRequest.type, verifyOtpSaga);
   yield takeLatest(authActions.resetPasswordRequest.type, resetPasswordSaga);
   yield takeLatest(authActions.changePasswordRequest.type, changePasswordSaga);
+  yield takeLatest(authActions.updateEmailRequest.type, updateEmailSaga);
 }

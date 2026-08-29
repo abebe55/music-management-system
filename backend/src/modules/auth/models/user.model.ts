@@ -24,16 +24,17 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
     versionKey: false,
     toJSON: {
-      transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        delete ret.password;
+      transform: (_doc, ret: Record<string, unknown>) => {
+        ret['id'] = (ret['_id'] as { toString(): string }).toString();
+        delete ret['_id'];
+        delete ret['password'];
         return ret;
       },
     },
   },
 );
 
-userSchema.index({ email: 1 }, { unique: true });
+// Index is already declared via `unique: true` on the schema field above
+// — do not add a duplicate here
 
 export const UserModel = mongoose.model<IUser>('User', userSchema);
