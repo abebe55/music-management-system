@@ -152,13 +152,22 @@ const songsSlice = createSlice({
       state.deleteConfirmId = action.payload;
     },
     setFilters: (state, action: PayloadAction<Partial<SongQuery>>) => {
-      // Preserve page when setting other filters; reset page to 1 only
-      // when a non-page filter changes (search, genre, artist, album, etc.)
-      const isPageOnly = Object.keys(action.payload).length === 1 && 'page' in action.payload;
+      const payload = action.payload;
+      const keys = Object.keys(payload);
+      // If only page is being changed, don't reset to 1
+      // If only limit is being changed, reset page to 1
+      // For all other filter changes (search, genre, etc.), reset page to 1
+      const isPageOnly = keys.length === 1 && 'page' in payload;
+      const isLimitOnly = keys.length === 1 && 'limit' in payload;
+      const isLimitWithPage = 'limit' in payload && 'page' in payload;
+
       state.filters = {
         ...state.filters,
-        ...action.payload,
-        page: isPageOnly ? (action.payload.page ?? 1) : 1,
+        ...payload,
+        page: isPageOnly ? (payload.page ?? 1)
+          : isLimitOnly ? 1
+          : isLimitWithPage ? (payload.page ?? 1)
+          : 1,
       };
     },
     clearError: (state) => {

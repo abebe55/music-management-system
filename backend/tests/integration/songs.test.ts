@@ -6,21 +6,19 @@ import { SongModel } from '../../src/modules/songs/song.model';
 import { hashPassword } from '../../src/common/utils/password';
 import { signAccessToken } from '../../src/common/utils/token';
 import { validCreateSongPayload } from '../fixtures/song.fixture';
-
-const MONGO_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/music_test';
+import { connectTestDb, disconnectTestDb } from '../helpers/db';
 
 describe('Songs API — Integration', () => {
   let authToken: string;
   let userId: string;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(MONGO_URI);
-    }
+    await connectTestDb('songs');
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.connection.db?.dropDatabase();
+    await disconnectTestDb();
   });
 
   beforeEach(async () => {
@@ -28,9 +26,9 @@ describe('Songs API — Integration', () => {
     await UserModel.deleteMany({});
 
     const hashed = await hashPassword('Test@1234');
-    const user = await UserModel.create({ email: 'test@example.com', password: hashed });
+    const user = await UserModel.create({ email: 'test@songs.com', password: hashed });
     userId = String(user._id);
-    authToken = signAccessToken({ userId, email: 'test@example.com' });
+    authToken = signAccessToken({ userId, email: 'test@songs.com' });
   });
 
   describe('POST /api/v1/songs', () => {
@@ -44,7 +42,9 @@ describe('Songs API — Integration', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.title).toBe(validCreateSongPayload.title);
       expect(res.body.data.artist).toBe(validCreateSongPayload.artist);
+      // toJSON transform maps _id → id
       expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data).not.toHaveProperty('_id');
     });
 
     it('should return 400 for missing required fields', async () => {

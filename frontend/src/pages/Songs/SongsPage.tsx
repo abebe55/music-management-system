@@ -133,6 +133,11 @@ const SongsPage: React.FC = () => {
     dispatch(songsActions.setFilters({ page }));
   }, [dispatch]);
 
+  const handleLimitChange = useCallback((limit: number) => {
+    // Reset to page 1 when rows-per-page changes
+    dispatch(songsActions.setFilters({ limit, page: 1 }));
+  }, [dispatch]);
+
   const handleEdit = useCallback(
     (song: Song) => dispatch(songsActions.openEditModal(song)),
     [dispatch],
@@ -231,6 +236,7 @@ const SongsPage: React.FC = () => {
               total={pagination.total}
               limit={pagination.limit}
               onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
             />
           </CardFooter>
         )}

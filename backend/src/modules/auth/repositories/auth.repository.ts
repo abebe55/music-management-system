@@ -16,7 +16,7 @@ export class AuthRepository {
 
   async create(email: string, hashedPassword: string): Promise<IUser> {
     const user = await UserModel.create({ email: email.toLowerCase(), password: hashedPassword });
-    return user.toObject() as IUser;
+    return user.toJSON() as unknown as IUser;
   }
 
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
