@@ -48,6 +48,9 @@ export const env = {
     user: optionalEnv('SMTP_USER', ''),
     pass: optionalEnv('SMTP_PASS', ''),
     from: optionalEnv('EMAIL_FROM', 'MusicFlow <noreply@musicflow.com>'),
+    brevoApiKey: optionalEnv('BREVO_API_KEY', ''),
+    fromName: optionalEnv('EMAIL_FROM_NAME', 'MusicFlow'),
+    fromAddress: optionalEnv('EMAIL_FROM_ADDRESS', 'newformelabs@gmail.com'),
   },
   otp: {
     expiresMinutes: parseInt(optionalEnv('OTP_EXPIRES_MINUTES', '10'), 10),

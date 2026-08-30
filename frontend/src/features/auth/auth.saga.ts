@@ -44,7 +44,8 @@ function* forgotPasswordSaga(action: ReturnType<typeof authActions.forgotPasswor
 function* verifyOtpSaga(action: ReturnType<typeof authActions.verifyOtpRequest>) {
   try {
     yield call(authApi.verifyOtp, action.payload);
-    yield put(authActions.verifyOtpSuccess());
+    // Pass the OTP forward so ResetPasswordForm can use it
+    yield put(authActions.verifyOtpSuccess({ otp: action.payload.otp }));
   } catch (error) {
     yield put(authActions.verifyOtpFailure(extractErrorMessage(error)));
   }

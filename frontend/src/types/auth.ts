@@ -47,4 +47,5 @@ export interface AuthState {
   // Forgot password flow
   forgotPasswordStep: 'email' | 'otp' | 'reset' | 'done';
   forgotPasswordEmail: string;
+  forgotPasswordOtp: string;  // OTP captured after successful verify
 }
