@@ -12,6 +12,7 @@ const initialState: AuthState = {
   error: null,
   forgotPasswordStep: 'email',
   forgotPasswordEmail: '',
+  forgotPasswordOtp: '',
 };
 
 const authSlice = createSlice({
@@ -65,9 +66,10 @@ const authSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-    verifyOtpSuccess: (state) => {
+    verifyOtpSuccess: (state, action: PayloadAction<{ otp: string }>) => {
       state.isLoading = false;
       state.forgotPasswordStep = 'reset';
+      state.forgotPasswordOtp = action.payload.otp;  // store verified OTP
     },
     verifyOtpFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -131,6 +133,7 @@ const authSlice = createSlice({
     resetForgotPasswordFlow: (state) => {
       state.forgotPasswordStep = 'email';
       state.forgotPasswordEmail = '';
+      state.forgotPasswordOtp = '';
       state.error = null;
     },
   },

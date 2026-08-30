@@ -15,8 +15,12 @@ const config: Config = {
     '!src/server.ts',
     '!src/database/seed.ts',
   ],
-  testTimeout: 30000,
-  // ts-jest config moved out of deprecated `globals`
+  testTimeout: 60000,
+  // Set NODE_ENV=test so services skip real external calls (email, etc.)
+  testEnvironmentOptions: {},
+  globalSetup: undefined,
+  setupFiles: ['<rootDir>/tests/helpers/jest.env.ts'],
+  // ts-jest config
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',

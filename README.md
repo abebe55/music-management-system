@@ -195,11 +195,4 @@ Key backend variables:
 
 ---
 
-## Demo Credentials
 
-After running `npm run seed`:
-
-```
-Email:    admin@musicflow.com
-Password: Admin@1234
-```

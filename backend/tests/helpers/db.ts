@@ -1,43 +1,54 @@
 /**
- * Shared test database helpers.
+ * Test database helpers.
  *
- * Each integration test suite gets its own MongoDB database name
- * (e.g. music_test_auth, music_test_songs) to avoid cross-suite
- * duplicate-key conflicts when Jest runs suites in parallel workers.
+ * Integration tests run with --runInBand (serial) so each suite
+ * connects, uses, and disconnects its own isolated database in order.
  */
 import mongoose from 'mongoose';
 
-const BASE_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017';
-
-/** Strip any existing DB name from the URI and append the given DB name. */
-function buildUri(dbName: string): string {
-  // Remove trailing slash + optional DB segment
-  const base = BASE_URI.replace(/\/[^/?]+(\?.*)?$/, '');
-  return `${base}/${dbName}`;
+/** Extract host+port from any mongodb:// URI. */
+function getMongoBase(): string {
+  const uri = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/music_management';
+  const match = uri.match(/^(mongodb(?:\+srv)?:\/\/[^/]+)/);
+  return match ? match[1] : 'mongodb://localhost:27017';
 }
 
 export async function connectTestDb(suiteName: string): Promise<void> {
   const dbName = `music_test_${suiteName}`;
-  const uri = buildUri(dbName);
+  const uri = `${getMongoBase()}/${dbName}`;
 
-  if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(uri);
-  } else if (mongoose.connection.name !== dbName) {
-    // Already connected to a different DB — close and reconnect
-    await mongoose.connection.close();
-    await mongoose.connect(uri);
+  // Already connected to the right DB — nothing to do
+  if (
+    mongoose.connection.readyState === 1 &&
+    mongoose.connection.name === dbName
+  ) {
+    return;
   }
+
+  // Close any stale connection first
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+    // Brief pause to let MongoDB release the connection cleanly
+    await new Promise((r) => setTimeout(r, 200));
+  }
+
+  await mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 15000,  // increased from 5s
+    socketTimeoutMS: 30000,
+    connectTimeoutMS: 15000,
+  });
 }
 
 export async function disconnectTestDb(): Promise<void> {
-  await mongoose.connection.close();
-}
-
-export async function clearCollections(...collectionNames: string[]): Promise<void> {
-  const db = mongoose.connection.db;
-  if (!db) return;
-  for (const name of collectionNames) {
-    const coll = db.collection(name);
-    await coll.deleteMany({});
+  if (mongoose.connection.readyState !== 0) {
+    // Drop the test database to leave no residue
+    try {
+      await mongoose.connection.db?.dropDatabase();
+    } catch {
+      // ignore drop errors
+    }
+    await mongoose.connection.close();
+    // Brief pause before next suite connects
+    await new Promise((r) => setTimeout(r, 300));
   }
 }

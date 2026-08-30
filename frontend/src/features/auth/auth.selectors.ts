@@ -7,3 +7,4 @@ export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
 export const selectForgotPasswordStep = (state: RootState) => state.auth.forgotPasswordStep;
 export const selectForgotPasswordEmail = (state: RootState) => state.auth.forgotPasswordEmail;
+export const selectForgotPasswordOtp = (state: RootState) => state.auth.forgotPasswordOtp;
