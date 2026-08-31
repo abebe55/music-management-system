@@ -1,42 +1,24 @@
-# Render deployment manifest
-# https://render.com/docs/blueprint-spec
-#
-# Usage:
-#   1. Push this file to GitHub
-#   2. In Render dashboard: New → Blueprint → select your repo
-#   3. Set the environment variables listed under envVars (the ones
-#      without a `value:` field must be filled in on the Render dashboard)
 
 services:
   - type: web
     name: musicflow-backend
     runtime: docker
-    # Render builds using backend/Dockerfile.
-    # The build context is the REPOSITORY ROOT so Dockerfile can access
-    # backend/ files with COPY backend/... — but our Dockerfile uses
-    # context=./backend, so set rootDir to backend.
+
     rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free                     # upgrade to starter/standard for production
     autoDeploy: true               # redeploy on every push to the branch below
     branch: main
 
-    # ── Environment variables ────────────────────────────────────────────────
-    # Variables marked sync: false must be added manually in the Render
-    # dashboard (they contain secrets that must NOT be in source control).
     envVars:
       - key: NODE_ENV
         value: production
 
-      # Render injects PORT automatically — do not set it here.
 
-      # MongoDB Atlas connection string
-      # Format: mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<dbname>
       - key: MONGODB_URI
         sync: false                # set manually in Render dashboard
 
-      # JWT secrets — generate with:
-      # node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
@@ -46,8 +28,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
 
-      # Your Vercel frontend URL — required for CORS
-      # e.g. https://musicflow.vercel.app
+      
       - key: FRONTEND_URL
         sync: false
 
