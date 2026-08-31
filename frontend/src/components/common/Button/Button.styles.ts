@@ -12,35 +12,42 @@ interface ButtonStyleProps {
 }
 
 const variantStyles: Record<Variant, string> = {
+  // Card background (white) with strong blue text and a thin light border
   primary: `
-    background: ${theme.colors.primary};
-    color: ${theme.colors.white};
-    border: 2px solid ${theme.colors.primary};
-    &:hover:not(:disabled) { background: ${theme.colors.primaryDark}; border-color: ${theme.colors.primaryDark}; }
+    background: ${theme.colors.white};
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
+    font-weight: ${theme.fontWeights.semibold};
+    &:hover:not(:disabled) {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
   `,
   secondary: `
     background: ${theme.colors.primaryLight};
     color: ${theme.colors.primary};
-    border: 2px solid ${theme.colors.primaryLight};
-    &:hover:not(:disabled) { background: #e4deff; border-color: #e4deff; }
+    border: 1px solid #c4b5fd;
+    &:hover:not(:disabled) { background: #e4deff; border-color: #a78bfa; }
   `,
   danger: `
-    background: ${theme.colors.danger};
-    color: ${theme.colors.white};
-    border: 2px solid ${theme.colors.danger};
-    &:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; }
+    background: ${theme.colors.white};
+    color: ${theme.colors.danger};
+    border: 1px solid #fca5a5;
+    font-weight: ${theme.fontWeights.semibold};
+    &:hover:not(:disabled) { background: ${theme.colors.dangerLight}; border-color: #f87171; color: #dc2626; }
   `,
   ghost: `
     background: transparent;
     color: ${theme.colors.textSecondary};
-    border: 2px solid transparent;
+    border: 1px solid transparent;
     &:hover:not(:disabled) { background: ${theme.colors.surfaceHover}; color: ${theme.colors.textPrimary}; }
   `,
   outline: `
     background: transparent;
-    color: ${theme.colors.primary};
-    border: 2px solid ${theme.colors.primary};
-    &:hover:not(:disabled) { background: ${theme.colors.primaryLight}; }
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
+    &:hover:not(:disabled) { background: #eff6ff; border-color: #3b82f6; }
   `,
 };
 

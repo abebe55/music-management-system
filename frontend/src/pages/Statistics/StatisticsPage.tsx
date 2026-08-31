@@ -14,27 +14,11 @@ import { Spinner } from '../../components/common/Spinner/Spinner';
 import { ErrorState } from '../../components/common/ErrorState/ErrorState';
 import { theme } from '../../styles/theme';
 
-const PageHeader = styled.div`
-  margin-bottom: 24px;
-`;
-
-const PageTitle = styled.h1`
-  font-size: ${theme.fontSizes['2xl']};
-  font-weight: ${theme.fontWeights.bold};
-  color: ${theme.colors.textPrimary};
-`;
-
-const PageSubtitle = styled.p`
-  font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.textMuted};
-  margin-top: 4px;
-`;
-
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 10px;
 
   @media (max-width: ${theme.breakpoints.lg}) { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: ${theme.breakpoints.sm}) { grid-template-columns: 1fr; }
@@ -43,8 +27,8 @@ const StatsGrid = styled.div`
 const TwoColGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 10px;
 
   @media (max-width: ${theme.breakpoints.lg}) { grid-template-columns: 1fr; }
 `;
@@ -54,7 +38,7 @@ const FullSection = styled.div`
   border-radius: ${theme.radii.lg};
   padding: 20px 24px;
   box-shadow: ${theme.shadows.card};
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 `;
 
 const SectionTitle = styled.h3`
@@ -101,10 +85,6 @@ const StatisticsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <PageHeader>
-        <PageTitle>Statistics</PageTitle>
-        <PageSubtitle>Insights about your music library</PageSubtitle>
-      </PageHeader>
 
       {isLoading && <Spinner centered />}
       {error && (
@@ -231,3 +211,5 @@ const StatisticsPage: React.FC = () => {
 };
 
 export default StatisticsPage;
+
+

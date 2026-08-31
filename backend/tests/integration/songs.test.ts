@@ -25,12 +25,13 @@ describe('Songs API — Integration', () => {
     await SongModel.deleteMany({});
     await UserModel.deleteMany({});
 
-    const hashed = await hashPassword('Test@1234');
+    const hashed = await hashPassword('Test@1234!');
     const user = await UserModel.create({ email: 'test@songs.com', password: hashed });
     userId = String(user._id);
     authToken = signAccessToken({ userId, email: 'test@songs.com' });
   });
 
+  // ── POST /api/v1/songs ─────────────────────────────────────
   describe('POST /api/v1/songs', () => {
     it('should create a song with valid payload', async () => {
       const res = await request(app)
@@ -42,7 +43,6 @@ describe('Songs API — Integration', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.title).toBe(validCreateSongPayload.title);
       expect(res.body.data.artist).toBe(validCreateSongPayload.artist);
-      // toJSON transform maps _id → id
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).not.toHaveProperty('_id');
     });
@@ -66,6 +66,49 @@ describe('Songs API — Integration', () => {
     });
   });
 
+  // ── Validation edge cases (Task B) ─────────────────────────
+  describe('POST /api/v1/songs — validation edge cases', () => {
+    it('should return 400 when artist is pure numbers (no letters)', async () => {
+      const res = await request(app)
+        .post('/api/v1/songs')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ ...validCreateSongPayload, artist: '4564' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      const details = res.body.error?.details as Array<{ field: string }> | undefined;
+      const artistError = details?.find((d) => d.field === 'artist');
+      expect(artistError).toBeDefined();
+    });
+
+    it('should allow artist names with letters AND numbers (blink-182)', async () => {
+      const res = await request(app)
+        .post('/api/v1/songs')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ ...validCreateSongPayload, artist: 'blink-182', title: 'All The Small Things' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.artist).toBe('blink-182');
+    });
+
+    it('should return 409 Conflict for exact duplicate title+artist+album', async () => {
+      await request(app)
+        .post('/api/v1/songs')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(validCreateSongPayload);
+
+      const res = await request(app)
+        .post('/api/v1/songs')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(validCreateSongPayload);
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error?.code).toBe('CONFLICT');
+    });
+  });
+
+  // ── GET /api/v1/songs ──────────────────────────────────────
   describe('GET /api/v1/songs', () => {
     it('should return paginated list of songs', async () => {
       await SongModel.create(validCreateSongPayload);
@@ -108,6 +151,7 @@ describe('Songs API — Integration', () => {
     });
   });
 
+  // ── GET /api/v1/songs/:id ──────────────────────────────────
   describe('GET /api/v1/songs/:id', () => {
     it('should return a song by id', async () => {
       const song = await SongModel.create(validCreateSongPayload);
@@ -131,6 +175,7 @@ describe('Songs API — Integration', () => {
     });
   });
 
+  // ── PUT /api/v1/songs/:id ──────────────────────────────────
   describe('PUT /api/v1/songs/:id', () => {
     it('should update a song', async () => {
       const song = await SongModel.create(validCreateSongPayload);
@@ -145,6 +190,7 @@ describe('Songs API — Integration', () => {
     });
   });
 
+  // ── DELETE /api/v1/songs/:id ───────────────────────────────
   describe('DELETE /api/v1/songs/:id', () => {
     it('should delete a song', async () => {
       const song = await SongModel.create(validCreateSongPayload);

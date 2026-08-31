@@ -1,133 +1,149 @@
 import { OtpService } from '../../../src/modules/auth/services/otp.service';
 import { PasswordResetRepository } from '../../../src/modules/auth/repositories/password-reset.repository';
-import { AuthRepository } from '../../../src/modules/auth/repositories/auth.repository';
 import { AppError } from '../../../src/common/errors/app-error';
-import { mockUser } from '../../fixtures/user.fixture';
+import * as passwordUtils from '../../../src/common/utils/password';
 
 jest.mock('../../../src/modules/auth/repositories/password-reset.repository');
-jest.mock('../../../src/modules/auth/repositories/auth.repository');
+jest.mock('../../../src/common/utils/password');
 
 const MockedPasswordResetRepo = PasswordResetRepository as jest.MockedClass<typeof PasswordResetRepository>;
-const MockedAuthRepo = AuthRepository as jest.MockedClass<typeof AuthRepository>;
 
-const makeResetRecord = (overrides: Record<string, unknown> = {}) => ({
-  _id: 'reset-id',
-  userId: 'user-id',
-  email: 'test@example.com',
-  otp: '123456',
-  expiresAt: new Date(Date.now() + 600_000), // 10 min future
-  attempts: 0,
-  isUsed: false,
-  createdAt: new Date(),
-  ...overrides,
-});
+/** Build a reset record with a pre-hashed OTP for testing. */
+function makeRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    _id: 'reset-id',
+    userId: 'user-id',
+    email: 'test@example.com',
+    otpHash: '$2a$12$hashedOtpValue',  // bcrypt hash, not plain OTP
+    expiresAt: new Date(Date.now() + 600_000),
+    attempts: 0,
+    isUsed: false,
+    createdAt: new Date(),
+    ...overrides,
+  };
+}
 
 describe('OtpService', () => {
   let service: OtpService;
-  let passwordResetRepoMock: jest.Mocked<PasswordResetRepository>;
-  let authRepoMock: jest.Mocked<AuthRepository>;
+  let repoMock: jest.Mocked<PasswordResetRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    passwordResetRepoMock = new MockedPasswordResetRepo() as jest.Mocked<PasswordResetRepository>;
-    authRepoMock = new MockedAuthRepo() as jest.Mocked<AuthRepository>;
-    service = new OtpService(passwordResetRepoMock, authRepoMock);
+    repoMock = new MockedPasswordResetRepo() as jest.Mocked<PasswordResetRepository>;
+    service = new OtpService(repoMock);
   });
 
   // ── generateAndStoreOtp ──────────────────────────────────
   describe('generateAndStoreOtp', () => {
-    it('should generate a 6-digit numeric OTP when user exists', async () => {
-      const user = mockUser();
-      authRepoMock.findByEmail.mockResolvedValue(user);
-      passwordResetRepoMock.create.mockResolvedValue(makeResetRecord() as never);
+    it('should return a 6-digit OTP and store its hash', async () => {
+      (passwordUtils.hashPassword as jest.Mock).mockResolvedValue('$2a$12$hashedValue');
+      repoMock.create.mockResolvedValue(makeRecord() as never);
 
-      const { otp } = await service.generateAndStoreOtp(user.email);
+      const otp = await service.generateAndStoreOtp('user-id', 'test@example.com');
 
       expect(otp).toHaveLength(6);
       expect(/^\d{6}$/.test(otp)).toBe(true);
-      expect(passwordResetRepoMock.create).toHaveBeenCalledWith(
-        expect.any(String),
-        user.email,
-        otp,
+      // Repo should receive the HASH, not the plain OTP
+      expect(repoMock.create).toHaveBeenCalledWith(
+        'user-id',
+        'test@example.com',
+        '$2a$12$hashedValue',
         expect.any(Date),
       );
-    });
-
-    it('should throw AppError.notFound when email does not exist', async () => {
-      authRepoMock.findByEmail.mockResolvedValue(null);
-
-      await expect(
-        service.generateAndStoreOtp('nobody@example.com'),
-      ).rejects.toBeInstanceOf(AppError);
-    });
-
-    it('should throw 404 when email does not exist', async () => {
-      authRepoMock.findByEmail.mockResolvedValue(null);
-
-      await expect(
-        service.generateAndStoreOtp('nobody@example.com'),
-      ).rejects.toMatchObject({ statusCode: 404 });
+      // hashPassword must have been called with the plain OTP
+      expect(passwordUtils.hashPassword).toHaveBeenCalledWith(otp);
     });
   });
 
-  // ── validateOtp ──────────────────────────────────────────
-  describe('validateOtp', () => {
-    it('should return the reset record when OTP matches and is valid', async () => {
-      const record = makeResetRecord();
-      passwordResetRepoMock.findLatestByEmail.mockResolvedValue(record as never);
+  // ── validateOtpAndIssueResetToken ─────────────────────────
+  describe('validateOtpAndIssueResetToken', () => {
+    it('should return a reset token when OTP matches', async () => {
+      const record = makeRecord();
+      repoMock.findLatestByEmail.mockResolvedValue(record as never);
+      (passwordUtils.comparePassword as jest.Mock).mockResolvedValue(true);
+      repoMock.setResetToken.mockResolvedValue(undefined);
 
-      const result = await service.validateOtp('test@example.com', '123456');
+      const token = await service.validateOtpAndIssueResetToken('test@example.com', '123456');
 
-      expect(result).toEqual(record);
-      expect(passwordResetRepoMock.incrementAttempts).not.toHaveBeenCalled();
+      expect(token).toHaveLength(64);    // 32 bytes hex = 64 chars
+      expect(repoMock.setResetToken).toHaveBeenCalledWith(
+        'reset-id',
+        token,
+        expect.any(Date),
+      );
+      expect(repoMock.incrementAttempts).not.toHaveBeenCalled();
     });
 
-    it('should throw and increment attempts when OTP does not match', async () => {
-      const record = makeResetRecord({ otp: '999999' });
-      passwordResetRepoMock.findLatestByEmail.mockResolvedValue(record as never);
-      passwordResetRepoMock.incrementAttempts.mockResolvedValue(undefined);
+    it('should increment attempts and throw when OTP does not match', async () => {
+      const record = makeRecord();
+      repoMock.findLatestByEmail.mockResolvedValue(record as never);
+      (passwordUtils.comparePassword as jest.Mock).mockResolvedValue(false);
+      repoMock.incrementAttempts.mockResolvedValue(undefined);
 
       await expect(
-        service.validateOtp('test@example.com', '123456'),
+        service.validateOtpAndIssueResetToken('test@example.com', '000000'),
       ).rejects.toBeInstanceOf(AppError);
-      expect(passwordResetRepoMock.incrementAttempts).toHaveBeenCalledWith('reset-id');
+      expect(repoMock.incrementAttempts).toHaveBeenCalledWith('reset-id');
     });
 
     it('should throw when OTP is expired', async () => {
-      const record = makeResetRecord({ expiresAt: new Date(Date.now() - 1000) });
-      passwordResetRepoMock.findLatestByEmail.mockResolvedValue(record as never);
+      const record = makeRecord({ expiresAt: new Date(Date.now() - 1000) });
+      repoMock.findLatestByEmail.mockResolvedValue(record as never);
+      (passwordUtils.comparePassword as jest.Mock).mockResolvedValue(true);
 
       await expect(
-        service.validateOtp('test@example.com', '123456'),
+        service.validateOtpAndIssueResetToken('test@example.com', '123456'),
       ).rejects.toBeInstanceOf(AppError);
     });
 
-    it('should throw when max attempts are exceeded', async () => {
-      const record = makeResetRecord({ attempts: 5 });
-      passwordResetRepoMock.findLatestByEmail.mockResolvedValue(record as never);
+    it('should throw when max attempts exceeded', async () => {
+      const record = makeRecord({ attempts: 5 });
+      repoMock.findLatestByEmail.mockResolvedValue(record as never);
 
       await expect(
-        service.validateOtp('test@example.com', '123456'),
+        service.validateOtpAndIssueResetToken('test@example.com', '123456'),
       ).rejects.toBeInstanceOf(AppError);
     });
 
-    it('should throw when no active reset record exists', async () => {
-      passwordResetRepoMock.findLatestByEmail.mockResolvedValue(null);
+    it('should throw when no reset record exists', async () => {
+      repoMock.findLatestByEmail.mockResolvedValue(null);
 
       await expect(
-        service.validateOtp('test@example.com', '123456'),
+        service.validateOtpAndIssueResetToken('test@example.com', '123456'),
       ).rejects.toBeInstanceOf(AppError);
     });
   });
 
-  // ── consumeOtp ───────────────────────────────────────────
-  describe('consumeOtp', () => {
-    it('should mark the record as used', async () => {
-      passwordResetRepoMock.markAsUsed.mockResolvedValue(undefined);
+  // ── consumeResetToken ─────────────────────────────────────
+  describe('consumeResetToken', () => {
+    it('should return userId and mark record used for valid token', async () => {
+      const record = makeRecord({
+        resetToken: 'valid-token',
+        resetTokenExpiresAt: new Date(Date.now() + 900_000),
+      });
+      repoMock.findByResetToken.mockResolvedValue(record as never);
+      repoMock.markAsUsed.mockResolvedValue(undefined);
 
-      await service.consumeOtp('reset-id');
+      const userId = await service.consumeResetToken('valid-token');
 
-      expect(passwordResetRepoMock.markAsUsed).toHaveBeenCalledWith('reset-id');
+      expect(userId).toBe('user-id');
+      expect(repoMock.markAsUsed).toHaveBeenCalledWith('reset-id');
+    });
+
+    it('should throw for expired reset token', async () => {
+      const record = makeRecord({
+        resetToken: 'expired-token',
+        resetTokenExpiresAt: new Date(Date.now() - 1000),
+      });
+      repoMock.findByResetToken.mockResolvedValue(record as never);
+
+      await expect(service.consumeResetToken('expired-token')).rejects.toBeInstanceOf(AppError);
+    });
+
+    it('should throw for non-existent token', async () => {
+      repoMock.findByResetToken.mockResolvedValue(null);
+
+      await expect(service.consumeResetToken('fake')).rejects.toBeInstanceOf(AppError);
     });
   });
 });

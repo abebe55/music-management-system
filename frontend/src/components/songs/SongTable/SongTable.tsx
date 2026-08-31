@@ -11,12 +11,13 @@ interface SongTableProps {
   songs: Song[];
   page: number;
   limit: number;
+  onView: (song: Song) => void;
   onEdit: (song: Song) => void;
   onDelete: (id: string) => void;
 }
 
 export const SongTable: React.FC<SongTableProps> = ({
-  songs, page, limit, onEdit, onDelete,
+  songs, page, limit, onView, onEdit, onDelete,
 }) => (
   <TableWrapper>
     <Table aria-label="Songs list">
@@ -47,11 +48,11 @@ export const SongTable: React.FC<SongTableProps> = ({
               <DateText>{formatDate(song.createdAt)}</DateText>
             </Td>
             <ActionCell style={{ textAlign: 'center' }}>
-              {/* View */}
+              {/* View — now functional, opens detail modal */}
               <ActionButton
                 aria-label={`View ${song.title}`}
-                title="View"
-                style={{ color: '#6b7280' }}
+                title="View details"
+                onClick={() => onView(song)}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>

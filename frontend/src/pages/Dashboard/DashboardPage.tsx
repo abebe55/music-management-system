@@ -14,27 +14,11 @@ import { Spinner } from '../../components/common/Spinner/Spinner';
 import { ErrorState } from '../../components/common/ErrorState/ErrorState';
 import { theme } from '../../styles/theme';
 
-const PageHeader = styled.div`
-  margin-bottom: 24px;
-`;
-
-const PageTitle = styled.h1`
-  font-size: ${theme.fontSizes['2xl']};
-  font-weight: ${theme.fontWeights.bold};
-  color: ${theme.colors.textPrimary};
-`;
-
-const PageSubtitle = styled.p`
-  font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.textMuted};
-  margin-top: 4px;
-`;
-
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 10px;
 
   @media (max-width: ${theme.breakpoints.lg}) { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: ${theme.breakpoints.sm}) { grid-template-columns: 1fr; }
@@ -43,8 +27,8 @@ const StatsGrid = styled.div`
 const ChartsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 10px;
 
   @media (max-width: ${theme.breakpoints.lg}) { grid-template-columns: 1fr; }
 `;
@@ -52,8 +36,7 @@ const ChartsGrid = styled.div`
 const BottomGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
+  gap: 10px;
   @media (max-width: ${theme.breakpoints.lg}) { grid-template-columns: 1fr; }
 `;
 
@@ -69,10 +52,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <PageHeader>
-        <PageTitle>Dashboard</PageTitle>
-        <PageSubtitle>Overview of your music library</PageSubtitle>
-      </PageHeader>
+      {/* Title/subtitle now in the header bar — no PageHeader needed here */}
 
       {isLoading && <Spinner centered />}
       {error && (
@@ -91,7 +71,8 @@ const DashboardPage: React.FC = () => {
               iconBg="#f0eeff"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.colors.primary} strokeWidth="2">
-                  <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                  <path d="M9 18V5l12-2v13"/>
+                  <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
                 </svg>
               }
             />
@@ -102,7 +83,8 @@ const DashboardPage: React.FC = () => {
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.colors.secondary} strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
               }
@@ -123,8 +105,10 @@ const DashboardPage: React.FC = () => {
               iconBg="#f0fdf4"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.colors.success} strokeWidth="2">
-                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                  <line x1="2" y1="20" x2="22" y2="20"/>
                 </svg>
               }
             />
@@ -132,7 +116,6 @@ const DashboardPage: React.FC = () => {
 
           <ChartsGrid>
             <GenreStatistics data={stats.byGenre} />
-            {/* Placeholder for time-series chart */}
             <div style={{
               background: theme.colors.surface,
               borderRadius: theme.radii.lg,
@@ -143,7 +126,10 @@ const DashboardPage: React.FC = () => {
                 Songs by Album
               </h3>
               {stats.byAlbum.slice(0, 5).map((a) => (
-                <div key={a.album} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div key={a.album} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '8px 0', borderBottom: `1px solid ${theme.colors.border}`,
+                }}>
                   <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textPrimary, fontWeight: 500 }}>{a.album}</span>
                   <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{a.artist} · {a.songCount} songs</span>
                 </div>
@@ -162,3 +148,5 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+
+

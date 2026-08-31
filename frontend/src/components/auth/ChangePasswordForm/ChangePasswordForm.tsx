@@ -5,6 +5,7 @@ import { selectAuthLoading, selectAuthError } from '../../../features/auth/auth.
 import { Input } from '../../common/Input/Input';
 import { Button } from '../../common/Button/Button';
 import { FormError } from '../../common/FormError/FormError';
+import PasswordStrength from '../PasswordStrength/PasswordStrength';
 import styled from '@emotion/styled';
 import { theme } from '../../../styles/theme';
 
@@ -22,6 +23,16 @@ const SuccessBox = styled.div`
   font-size: ${theme.fontSizes.sm};
 `;
 
+function isPasswordStrong(pwd: string): boolean {
+  return (
+    pwd.length >= 8 &&
+    /[A-Z]/.test(pwd) &&
+    /[a-z]/.test(pwd) &&
+    /[0-9]/.test(pwd) &&
+    /[^A-Za-z0-9]/.test(pwd)
+  );
+}
+
 export const ChangePasswordForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectAuthLoading);
@@ -31,9 +42,8 @@ export const ChangePasswordForm: React.FC = () => {
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<{ current?: string; new?: string; confirm?: string }>({});
   const [success, setSuccess] = useState(false);
-
-  // Detect success when loading clears and no error
   const [wasLoading, setWasLoading] = useState(false);
+
   useEffect(() => {
     if (isLoading) setWasLoading(true);
     if (wasLoading && !isLoading && !error) {
@@ -48,8 +58,13 @@ export const ChangePasswordForm: React.FC = () => {
   const validate = () => {
     const e: typeof errors = {};
     if (!currentPassword) e.current = 'Current password is required';
-    if (!newPassword) e.new = 'New password is required';
-    else if (newPassword.length < 8) e.new = 'Password must be at least 8 characters';
+    if (!newPassword) {
+      e.new = 'New password is required';
+    } else if (!isPasswordStrong(newPassword)) {
+      e.new = 'Password must be 8+ chars with uppercase, lowercase, number and special character';
+    } else if (newPassword === currentPassword) {
+      e.new = 'New password must be different from current password';
+    }
     if (!confirm) e.confirm = 'Please confirm your new password';
     else if (newPassword !== confirm) e.confirm = 'Passwords do not match';
     setErrors(e);
@@ -86,17 +101,23 @@ export const ChangePasswordForm: React.FC = () => {
         disabled={isLoading}
         autoComplete="current-password"
       />
-      <Input
-        label="New Password"
-        type="password"
-        placeholder="Enter new password"
-        value={newPassword}
-        onChange={(e) => { setNewPassword(e.target.value); setErrors((p) => ({ ...p, new: undefined })); }}
-        error={errors.new}
-        required
-        disabled={isLoading}
-        autoComplete="new-password"
-      />
+
+      <div>
+        <Input
+          label="New Password"
+          type="password"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChange={(e) => { setNewPassword(e.target.value); setErrors((p) => ({ ...p, new: undefined })); }}
+          error={errors.new}
+          required
+          disabled={isLoading}
+          autoComplete="new-password"
+        />
+        {/* Live strength indicator */}
+        {newPassword.length > 0 && <div style={{ marginTop: 8 }}><PasswordStrength password={newPassword} /></div>}
+      </div>
+
       <Input
         label="Confirm New Password"
         type="password"
@@ -108,6 +129,7 @@ export const ChangePasswordForm: React.FC = () => {
         disabled={isLoading}
         autoComplete="new-password"
       />
+
       <Button type="submit" isLoading={isLoading}>
         Update Password
       </Button>

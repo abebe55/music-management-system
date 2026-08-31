@@ -11,6 +11,7 @@ import { MainLayout } from '../../layouts/MainLayout/MainLayout';
 import { SongTable } from '../../components/songs/SongTable/SongTable';
 import { SongFilters } from '../../components/songs/SongFilters/SongFilters';
 import { DeleteSongDialog } from '../../components/songs/DeleteSongDialog/DeleteSongDialog';
+import { SongDetailModal } from '../../components/songs/SongDetailModal/SongDetailModal';
 import { Modal } from '../../components/common/Modal/Modal';
 import { SongForm } from '../../components/songs/SongForm/SongForm';
 import { Pagination } from '../../components/common/Pagination/Pagination';
@@ -20,27 +21,6 @@ import { EmptyState } from '../../components/common/EmptyState/EmptyState';
 import { ErrorState } from '../../components/common/ErrorState/ErrorState';
 import { theme } from '../../styles/theme';
 import { Song, CreateSongRequest, UpdateSongRequest, SongQuery } from '../../types/song';
-
-const PageHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 12px;
-`;
-
-const PageTitle = styled.h1`
-  font-size: ${theme.fontSizes['2xl']};
-  font-weight: ${theme.fontWeights.bold};
-  color: ${theme.colors.textPrimary};
-`;
-
-const PageSubtitle = styled.p`
-  font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.textMuted};
-  margin-top: 2px;
-`;
 
 const Card = styled.div`
   background: ${theme.colors.surface};
@@ -75,6 +55,9 @@ const SongsPage: React.FC = () => {
   const selectedSong = useAppSelector(selectSelectedSong);
   const allArtists = useAppSelector(selectAllArtists);
   const allAlbums = useAppSelector(selectAllAlbums);
+
+  // Song detail modal state
+  const [viewSong, setViewSong] = React.useState<Song | null>(null);
 
   // ── Serialize filters to a stable string so we only fetch when
   //    the actual filter *values* change, not the object reference.
@@ -142,7 +125,7 @@ const SongsPage: React.FC = () => {
     (song: Song) => dispatch(songsActions.openEditModal(song)),
     [dispatch],
   );
-  const handleDelete = useCallback(
+  const handleView = useCallback((song: Song) => setViewSong(song), []);  const handleDelete = useCallback(
     (id: string) => dispatch(songsActions.setDeleteConfirmId(id)),
     [dispatch],
   );
@@ -159,24 +142,22 @@ const SongsPage: React.FC = () => {
     }
   }, [dispatch, modalMode, selectedSong]);
 
+  const addSongButton = (
+    <Button
+      size="sm"
+      leftIcon={
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      }
+      onClick={() => dispatch(songsActions.openCreateModal())}
+    >
+      Add Song
+    </Button>
+  );
+
   return (
-    <MainLayout>
-      <PageHeader>
-        <div>
-          <PageTitle>Songs</PageTitle>
-          <PageSubtitle>Manage your songs</PageSubtitle>
-        </div>
-        <Button
-          leftIcon={
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          }
-          onClick={() => dispatch(songsActions.openCreateModal())}
-        >
-          Add Song
-        </Button>
-      </PageHeader>
+    <MainLayout headerAction={addSongButton}>
 
       <Card>
         <CardHeader>
@@ -222,6 +203,7 @@ const SongsPage: React.FC = () => {
               songs={songs}
               page={pagination.page}
               limit={pagination.limit}
+              onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
@@ -260,8 +242,16 @@ const SongsPage: React.FC = () => {
 
       {/* Delete Confirmation */}
       <DeleteSongDialog />
+
+      {/* Song Detail View Modal */}
+      <SongDetailModal
+        song={viewSong}
+        isOpen={!!viewSong}
+        onClose={() => setViewSong(null)}
+      />
     </MainLayout>
   );
 };
 
 export default SongsPage;
+

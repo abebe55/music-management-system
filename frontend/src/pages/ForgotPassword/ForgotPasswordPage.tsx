@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
-import { selectForgotPasswordStep, selectForgotPasswordOtp } from '../../features/auth/auth.selectors';
+import { selectForgotPasswordStep, selectForgotPasswordResetToken } from '../../features/auth/auth.selectors';
 import { authActions } from '../../features/auth/auth.slice';
 import { AuthLayout } from '../../layouts/AuthLayout/AuthLayout';
 import { ForgotPasswordForm } from '../../components/auth/ForgotPasswordForm/ForgotPasswordForm';
@@ -40,7 +40,7 @@ const ForgotPasswordPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const step = useAppSelector(selectForgotPasswordStep);
   // OTP is stored in Redux after successful verify — no local state needed
-  const verifiedOtp = useAppSelector(selectForgotPasswordOtp);
+  const verifiedOtp = useAppSelector(selectForgotPasswordResetToken);
 
   const { title, subtitle } = TITLES[step] ?? TITLES.email;
 
@@ -55,7 +55,7 @@ const ForgotPasswordPage: React.FC = () => {
     <AuthLayout title={title} subtitle={subtitle}>
       {step === 'email' && <ForgotPasswordForm onBack={handleBack} />}
       {step === 'otp'   && <VerifyOtpForm onBack={handleBack} />}
-      {step === 'reset' && <ResetPasswordForm otp={verifiedOtp} />}
+      {step === 'reset' && <ResetPasswordForm resetToken={verifiedOtp} />}
       {step === 'done'  && (
         <SuccessBox>
           <GreenCircle>

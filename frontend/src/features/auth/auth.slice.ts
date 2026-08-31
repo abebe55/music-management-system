@@ -12,14 +12,14 @@ const initialState: AuthState = {
   error: null,
   forgotPasswordStep: 'email',
   forgotPasswordEmail: '',
-  forgotPasswordOtp: '',
+  forgotPasswordResetToken: '',   // short-lived token from verifyOtp
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // Login
+    // ── Login ─────────────────────────────────────────────────
     loginRequest: (state, _action: PayloadAction<{ email: string; password: string }>) => {
       state.isLoading = true;
       state.error = null;
@@ -36,7 +36,7 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Logout
+    // ── Logout ────────────────────────────────────────────────
     logoutRequest: (state) => { state.isLoading = true; },
     logoutSuccess: (state) => {
       state.isLoading = false;
@@ -46,7 +46,7 @@ const authSlice = createSlice({
       state.error = null;
     },
 
-    // Forgot password
+    // ── Forgot password ───────────────────────────────────────
     forgotPasswordRequest: (state, _action: PayloadAction<{ email: string }>) => {
       state.isLoading = true;
       state.error = null;
@@ -61,25 +61,26 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Verify OTP
+    // ── Verify OTP ────────────────────────────────────────────
     verifyOtpRequest: (state, _action: PayloadAction<{ email: string; otp: string }>) => {
       state.isLoading = true;
       state.error = null;
     },
-    verifyOtpSuccess: (state, action: PayloadAction<{ otp: string }>) => {
+    // Backend now returns a short-lived resetToken — store it for the reset step
+    verifyOtpSuccess: (state, action: PayloadAction<{ resetToken: string }>) => {
       state.isLoading = false;
       state.forgotPasswordStep = 'reset';
-      state.forgotPasswordOtp = action.payload.otp;  // store verified OTP
+      state.forgotPasswordResetToken = action.payload.resetToken;
     },
     verifyOtpFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
-    // Reset password
+    // ── Reset password ────────────────────────────────────────
     resetPasswordRequest: (
       state,
-      _action: PayloadAction<{ email: string; otp: string; newPassword: string }>,
+      _action: PayloadAction<{ resetToken: string; newPassword: string }>,
     ) => {
       state.isLoading = true;
       state.error = null;
@@ -87,13 +88,14 @@ const authSlice = createSlice({
     resetPasswordSuccess: (state) => {
       state.isLoading = false;
       state.forgotPasswordStep = 'done';
+      state.forgotPasswordResetToken = '';   // clear after use
     },
     resetPasswordFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
-    // Change password
+    // ── Change password ───────────────────────────────────────
     changePasswordRequest: (
       state,
       _action: PayloadAction<{ currentPassword: string; newPassword: string }>,
@@ -101,15 +103,13 @@ const authSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-    changePasswordSuccess: (state) => {
-      state.isLoading = false;
-    },
+    changePasswordSuccess: (state) => { state.isLoading = false; },
     changePasswordFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
-    // Update email
+    // ── Update email ──────────────────────────────────────────
     updateEmailRequest: (
       state,
       _action: PayloadAction<{ newEmail: string; password: string }>,
@@ -128,12 +128,12 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
-    // UI helpers
+    // ── UI helpers ────────────────────────────────────────────
     clearError: (state) => { state.error = null; },
     resetForgotPasswordFlow: (state) => {
       state.forgotPasswordStep = 'email';
       state.forgotPasswordEmail = '';
-      state.forgotPasswordOtp = '';
+      state.forgotPasswordResetToken = '';
       state.error = null;
     },
   },

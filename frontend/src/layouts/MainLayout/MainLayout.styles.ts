@@ -136,22 +136,29 @@ export const HeaderRight = styled.div`
 `;
 
 export const UserAvatar = styled.div`
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: ${theme.colors.primary};
-  color: ${theme.colors.white};
+  background: ${theme.colors.borderLight};
+  color: ${theme.colors.textSecondary};
+  border: 2px solid ${theme.colors.border};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: ${theme.fontSizes.sm};
   font-weight: ${theme.fontWeights.bold};
   cursor: pointer;
+  transition: all ${theme.transitions.fast};
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+    color: ${theme.colors.primary};
+  }
 `;
 
 export const PageContent = styled.main`
   flex: 1;
-  padding: 24px;
+  padding: 16px 20px 24px;   /* reduced top padding — header has the title */
   max-width: 1400px;
   width: 100%;
 `;

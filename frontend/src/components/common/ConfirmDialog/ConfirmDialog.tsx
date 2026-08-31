@@ -46,7 +46,6 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   title?: string;
   message?: string;
-  confirmLabel?: string;
   isLoading?: boolean;
   itemName?: string;
 }
@@ -57,7 +56,6 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   title = 'Delete Song',
   message,
-  confirmLabel = 'Delete',
   isLoading = false,
   itemName,
 }) => (
@@ -69,10 +67,10 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     footer={
       <>
         <Button variant="ghost" onClick={onClose} disabled={isLoading}>
-          Cancel
+          No
         </Button>
         <Button variant="danger" onClick={onConfirm} isLoading={isLoading}>
-          {confirmLabel}
+          Yes
         </Button>
       </>
     }

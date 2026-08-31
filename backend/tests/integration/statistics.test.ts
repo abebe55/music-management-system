@@ -23,7 +23,7 @@ describe('Statistics API — Integration', () => {
     await SongModel.deleteMany({});
     await UserModel.deleteMany({});
 
-    const hashed = await hashPassword('Test@1234');
+    const hashed = await hashPassword('Test@1234!');
     const user = await UserModel.create({ email: 'test@statistics.com', password: hashed });
     authToken = signAccessToken({ userId: String(user._id), email: 'test@statistics.com' });
 

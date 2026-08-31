@@ -10,6 +10,7 @@ export const Messages = {
     INVALID_CREDENTIALS: 'Invalid email or password',
     INVALID_OTP: 'Invalid or expired OTP code',
     OTP_MAX_ATTEMPTS: 'Maximum OTP attempts exceeded. Please request a new code',
+    OTP_COOLDOWN: 'Please wait before requesting another verification code',
     TOKEN_EXPIRED: 'Session expired. Please login again',
     TOKEN_INVALID: 'Invalid authentication token',
     UNAUTHORIZED: 'Authentication required',

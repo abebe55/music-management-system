@@ -13,7 +13,7 @@ export const mockUser = (overrides: Partial<IUser> = {}): IUser =>
 
 export const validLoginPayload = {
   email: 'test@example.com',
-  password: 'Test@1234',
+  password: 'Test@1234!',
 };
 
 export const validRegisterPayload = {

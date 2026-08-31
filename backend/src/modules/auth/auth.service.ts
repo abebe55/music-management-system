@@ -7,6 +7,7 @@ import { hashPassword, comparePassword } from '../../common/utils/password';
 import { AppError } from '../../common/errors/app-error';
 import { Messages } from '../../common/constants/messages';
 import { ErrorCodes } from '../../common/errors/error-codes';
+import { logger } from '../../common/utils/logger';
 import {
   LoginDto,
   ForgotPasswordDto,
@@ -26,7 +27,7 @@ export class AuthService {
   constructor() {
     this.authRepo = new AuthRepository();
     this.passwordResetRepo = new PasswordResetRepository();
-    this.otpService = new OtpService(this.passwordResetRepo, this.authRepo);
+    this.otpService = new OtpService(this.passwordResetRepo);
     this.emailService = new EmailService();
     this.sessionService = new SessionService();
   }
@@ -42,34 +43,46 @@ export class AuthService {
     }
 
     const tokens = this.sessionService.generateTokens(String(user._id), user.email);
-
     return {
       user: { id: String(user._id), email: user.email },
       tokens,
     };
   }
 
+  /**
+   * SECURITY: Always returns the same generic response whether or not the
+   * email exists, preventing account enumeration attacks.
+   */
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
-    const { otp } = await this.otpService.generateAndStoreOtp(dto.email);
+    const user = await this.authRepo.findByEmail(dto.email);
+    if (!user) {
+      logger.info(`Forgot password: no account for ${dto.email} (silenced)`);
+      return;
+    }
+    const otp = await this.otpService.generateAndStoreOtp(String(user._id), dto.email);
     await this.emailService.sendOtpEmail(dto.email, otp);
   }
 
-  async verifyOtp(dto: VerifyOtpDto): Promise<void> {
-    // Just validates — does not consume. Frontend will use OTP in reset step.
-    await this.otpService.validateOtp(dto.email, dto.otp);
+  /**
+   * Verifies the OTP (comparing against stored bcrypt hash) and returns a
+   * short-lived single-use reset token. The OTP is never re-used.
+   */
+  async verifyOtp(dto: VerifyOtpDto): Promise<{ resetToken: string }> {
+    const resetToken = await this.otpService.validateOtpAndIssueResetToken(
+      dto.email,
+      dto.otp,
+    );
+    return { resetToken };
   }
 
+  /**
+   * Resets the password using the reset token issued by verifyOtp.
+   * Token is single-use, expires after 15 minutes.
+   */
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
-    const record = await this.otpService.validateOtp(dto.email, dto.otp);
-
-    const user = await this.authRepo.findByEmail(dto.email);
-    if (!user) {
-      throw AppError.notFound(Messages.auth.EMAIL_NOT_FOUND, ErrorCodes.EMAIL_NOT_FOUND);
-    }
-
+    const userId = await this.otpService.consumeResetToken(dto.resetToken);
     const hashedPassword = await hashPassword(dto.newPassword);
-    await this.authRepo.updatePassword(String(user._id), hashedPassword);
-    await this.otpService.consumeOtp(String(record._id));
+    await this.authRepo.updatePassword(userId, hashedPassword);
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
@@ -101,9 +114,7 @@ export class AuthService {
     }
 
     const emailTaken = await this.authRepo.existsByEmail(dto.newEmail);
-    if (emailTaken) {
-      throw AppError.conflict('That email address is already in use');
-    }
+    if (emailTaken) throw AppError.conflict('That email address is already in use');
 
     await this.authRepo.updateEmail(userId, dto.newEmail);
     return { email: dto.newEmail.toLowerCase() };

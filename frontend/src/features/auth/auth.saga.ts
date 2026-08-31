@@ -35,6 +35,7 @@ function* logoutSaga() {
 function* forgotPasswordSaga(action: ReturnType<typeof authActions.forgotPasswordRequest>) {
   try {
     yield call(authApi.forgotPassword, { email: action.payload.email });
+    // Always succeeds visually — backend never reveals if email exists
     yield put(authActions.forgotPasswordSuccess({ email: action.payload.email }));
   } catch (error) {
     yield put(authActions.forgotPasswordFailure(extractErrorMessage(error)));
@@ -43,9 +44,13 @@ function* forgotPasswordSaga(action: ReturnType<typeof authActions.forgotPasswor
 
 function* verifyOtpSaga(action: ReturnType<typeof authActions.verifyOtpRequest>) {
   try {
-    yield call(authApi.verifyOtp, action.payload);
-    // Pass the OTP forward so ResetPasswordForm can use it
-    yield put(authActions.verifyOtpSuccess({ otp: action.payload.otp }));
+    // Backend returns { resetToken } — a short-lived single-use token
+    const response: AxiosResponse<ApiResponse<{ resetToken: string }>> = yield call(
+      authApi.verifyOtp,
+      action.payload,
+    );
+    const resetToken = response.data.data!.resetToken;
+    yield put(authActions.verifyOtpSuccess({ resetToken }));
   } catch (error) {
     yield put(authActions.verifyOtpFailure(extractErrorMessage(error)));
   }
@@ -53,6 +58,7 @@ function* verifyOtpSaga(action: ReturnType<typeof authActions.verifyOtpRequest>)
 
 function* resetPasswordSaga(action: ReturnType<typeof authActions.resetPasswordRequest>) {
   try {
+    // Uses { resetToken, newPassword } — no OTP re-sent
     yield call(authApi.resetPassword, action.payload);
     yield put(authActions.resetPasswordSuccess());
   } catch (error) {
@@ -76,7 +82,6 @@ function* updateEmailSaga(action: ReturnType<typeof authActions.updateEmailReque
       action.payload,
     );
     const newEmail = response.data.data!.email;
-    // Persist updated user to localStorage
     const stored = storage.getUser<{ id: string; email: string }>();
     if (stored) storage.setUser({ ...stored, email: newEmail });
     yield put(authActions.updateEmailSuccess({ email: newEmail }));

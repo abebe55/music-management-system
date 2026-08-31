@@ -6,12 +6,12 @@ import { formatNumber } from '../../../utils/formatters';
 const Card = styled.div`
   background: ${theme.colors.surface};
   border-radius: ${theme.radii.lg};
-  padding: 20px 24px;
+  padding: 14px 18px;
   box-shadow: ${theme.shadows.card};
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 `;
 

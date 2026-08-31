@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { sendSuccess } from '../../common/utils/response';
 import { Messages } from '../../common/constants/messages';
-import { HttpStatus } from '../../common/constants/http-status';
 import {
   LoginDto,
   ForgotPasswordDto,
@@ -21,14 +20,16 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 export async function forgotPassword(req: Request, res: Response): Promise<void> {
   const dto = req.body as ForgotPasswordDto;
+  // Always returns the same response — never reveals whether email exists
   await authService.forgotPassword(dto);
   sendSuccess(res, null, Messages.auth.OTP_SENT);
 }
 
 export async function verifyOtp(req: Request, res: Response): Promise<void> {
   const dto = req.body as VerifyOtpDto;
-  await authService.verifyOtp(dto);
-  sendSuccess(res, null, Messages.auth.OTP_VERIFIED);
+  // Returns { resetToken } — a short-lived single-use token for the reset step
+  const result = await authService.verifyOtp(dto);
+  sendSuccess(res, result, Messages.auth.OTP_VERIFIED);
 }
 
 export async function resetPassword(req: Request, res: Response): Promise<void> {
@@ -47,15 +48,14 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   sendSuccess(res, { id: req.userId, email: req.user?.email }, 'Profile retrieved');
 }
 
+export async function logout(_req: Request, res: Response): Promise<void> {
+  sendSuccess(res, null, Messages.auth.LOGOUT_SUCCESS);
+}
+
 export async function updateEmail(req: Request, res: Response): Promise<void> {
   const dto = req.body as { newEmail: string; password: string };
   const result = await authService.updateEmail(req.userId!, dto);
-  sendSuccess(res, result, 'Email updated successfully');
-}
-
-export async function logout(_req: Request, res: Response): Promise<void> {
-  // Stateless JWT — client discards token; server-side is a no-op
-  sendSuccess(res, null, Messages.auth.LOGOUT_SUCCESS);
+  sendSuccess(res, result, Messages.auth.EMAIL_UPDATED);
 }
 
 export async function refreshToken(req: Request, res: Response): Promise<void> {

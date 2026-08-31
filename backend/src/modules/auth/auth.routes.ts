@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { asyncHandler } from '../../common/utils/async-handler';
 import { validate } from '../../common/middleware/validation.middleware';
 import { authenticate } from '../../common/middleware/auth.middleware';
-import { authRateLimit } from '../../common/middleware/rate-limit.middleware';
+import {
+  loginRateLimit,
+  otpRequestRateLimit,
+  otpVerifyRateLimit,
+} from '../../common/middleware/rate-limit.middleware';
 import {
   login,
   forgotPassword,
@@ -25,17 +29,46 @@ import {
 
 const router = Router();
 
-// Public routes (rate-limited)
-router.post('/login', authRateLimit, validate(loginSchema), asyncHandler(login));
-router.post('/forgot-password', authRateLimit, validate(forgotPasswordSchema), asyncHandler(forgotPassword));
-router.post('/verify-otp', authRateLimit, validate(verifyOtpSchema), asyncHandler(verifyOtp));
-router.post('/reset-password', authRateLimit, validate(resetPasswordSchema), asyncHandler(resetPassword));
+// ── Public routes ─────────────────────────────────────────────
+router.post('/login',
+  loginRateLimit,
+  validate(loginSchema),
+  asyncHandler(login),
+);
+
+router.post('/forgot-password',
+  otpRequestRateLimit,        // dedicated OTP-request limiter
+  validate(forgotPasswordSchema),
+  asyncHandler(forgotPassword),
+);
+
+router.post('/verify-otp',
+  otpVerifyRateLimit,          // dedicated OTP-verify limiter
+  validate(verifyOtpSchema),
+  asyncHandler(verifyOtp),
+);
+
+router.post('/reset-password',
+  otpVerifyRateLimit,          // same strict limit on reset attempts
+  validate(resetPasswordSchema),
+  asyncHandler(resetPassword),
+);
+
 router.post('/refresh-token', asyncHandler(refreshToken));
 
-// Protected routes
+// ── Protected routes ──────────────────────────────────────────
 router.get('/me', authenticate, asyncHandler(getMe));
 router.post('/logout', authenticate, asyncHandler(logout));
-router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(changePassword));
-router.post('/update-email', authenticate, validate(updateEmailSchema), asyncHandler(updateEmail));
+router.post('/change-password',
+  authenticate,
+  validate(changePasswordSchema),
+  asyncHandler(changePassword),
+);
+
+router.post('/update-email',
+  authenticate,
+  validate(updateEmailSchema),
+  asyncHandler(updateEmail),
+);
 
 export default router;
