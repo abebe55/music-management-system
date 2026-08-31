@@ -8,8 +8,8 @@ function optionalEnv(key: string, fallback: string): string {
 }
 
 /**
- * Validates all required environment variables at startup.
- * Throws immediately with a descriptive message if any are missing
+ * Validates required environment variables at startup.
+ * Throws immediately with a clear message if any are missing/insecure
  * so the app never starts silently misconfigured.
  */
 export function validateEnv(): void {
@@ -30,7 +30,7 @@ export function validateEnv(): void {
     );
   }
 
-  // Warn about insecure defaults in production
+  // Reject insecure defaults in production
   if (process.env.NODE_ENV === 'production') {
     const insecureDefaults = [
       'music_management_jwt_secret_super_secure_key_2024',
@@ -39,18 +39,23 @@ export function validateEnv(): void {
     if (insecureDefaults.includes(process.env.JWT_SECRET ?? '')) {
       throw new Error('JWT_SECRET must be changed from the default value in production');
     }
+    if (!process.env.MONGODB_URI?.startsWith('mongodb')) {
+      throw new Error('MONGODB_URI must be set to a valid MongoDB connection string in production');
+    }
   }
 }
 
 export const env = {
   node: {
     env: optionalEnv('NODE_ENV', 'development'),
-    port: parseInt(optionalEnv('PORT', '5000'), 10),
+    // Render injects PORT at runtime — fall back to 5000 for local dev
+    port: parseInt(process.env.PORT ?? '5000', 10),
     isDev: optionalEnv('NODE_ENV', 'development') === 'development',
     isProd: optionalEnv('NODE_ENV', 'development') === 'production',
     isTest: optionalEnv('NODE_ENV', 'development') === 'test',
   },
   db: {
+    // Production: Atlas URI. Local: local MongoDB
     uri: optionalEnv('MONGODB_URI', 'mongodb://localhost:27017/music_management'),
   },
   jwt: {
@@ -75,6 +80,10 @@ export const env = {
     maxAttempts: parseInt(optionalEnv('OTP_MAX_ATTEMPTS', '5'), 10),
   },
   cors: {
+    // FRONTEND_URL — set this to your Vercel deployment URL in production
+    // e.g. https://your-app.vercel.app  (can be comma-separated for multiple)
+    frontendUrl: optionalEnv('FRONTEND_URL', ''),
+    // CORS_ORIGIN — local dev fallback, also supports comma-separated list
     origin: optionalEnv('CORS_ORIGIN', 'http://localhost:5173'),
   },
   rateLimit: {
