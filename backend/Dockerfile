@@ -31,6 +31,8 @@ USER appuser
 
 EXPOSE 5000
 
+# NODE_ENV is set to production. PORT is injected by Render at runtime
+# (process.env.PORT) — do NOT hardcode it here.
 ENV NODE_ENV=production
 
 ENTRYPOINT ["dumb-init", "--"]
