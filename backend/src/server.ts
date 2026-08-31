@@ -1,10 +1,14 @@
 import './config/env.config'; // Load env first
+import { validateEnv } from './config/env.config';
 import app from './app';
 import { connectDatabase } from './config/database.config';
 import { logger } from './common/utils/logger';
 import { env } from './config/env.config';
 
 async function bootstrap(): Promise<void> {
+  // Fail fast if required environment variables are missing
+  validateEnv();
+
   try {
     // Connect to MongoDB
     await connectDatabase();

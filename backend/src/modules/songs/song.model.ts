@@ -46,6 +46,16 @@ const songSchema = new Schema<ISong>(
 
 // Text search index
 songSchema.index({ title: 'text', artist: 'text', album: 'text' });
+// Unique composite index — prevents exact duplicate title+artist+album
+// (case-insensitive collation so "Shape of You" == "shape of you")
+songSchema.index(
+  { title: 1, artist: 1, album: 1 },
+  {
+    unique: true,
+    collation: { locale: 'en', strength: 2 },
+    name: 'unique_song_title_artist_album',
+  },
+);
 // Filter indexes
 songSchema.index({ genre: 1 });
 songSchema.index({ artist: 1 });

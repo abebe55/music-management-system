@@ -23,8 +23,7 @@ export interface VerifyOtpRequest {
 }
 
 export interface ResetPasswordRequest {
-  email: string;
-  otp: string;
+  resetToken: string;       // short-lived token from verifyOtp
   newPassword: string;
 }
 
@@ -47,5 +46,5 @@ export interface AuthState {
   // Forgot password flow
   forgotPasswordStep: 'email' | 'otp' | 'reset' | 'done';
   forgotPasswordEmail: string;
-  forgotPasswordOtp: string;  // OTP captured after successful verify
+  forgotPasswordResetToken: string;  // short-lived token from verifyOtp
 }

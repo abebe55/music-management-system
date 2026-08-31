@@ -97,8 +97,8 @@ export const theme = {
     toast: 300,
   },
   layout: {
-    sidebarWidth: '240px',
-    headerHeight: '64px',
+    sidebarWidth: '216px',   // reduced ~10% from 240px
+    headerHeight: '52px',    // slightly reduced from 64px
   },
 } as const;
 

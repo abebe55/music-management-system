@@ -36,10 +36,10 @@ async function seed(): Promise<void> {
   // Clear existing data
   await Promise.all([SongModel.deleteMany({}), UserModel.deleteMany({})]);
 
-  // Create demo user
-  const hashedPassword = await hashPassword('Admin@1234');
+  // Create demo user — password meets enterprise policy (8+ chars, upper, lower, number, special)
+  const hashedPassword = await hashPassword('Admin@1234!');
   await UserModel.create({ email: 'admin@musicflow.com', password: hashedPassword });
-  logger.info('Demo user created: admin@musicflow.com / Admin@1234');
+  logger.info('Demo user created: admin@musicflow.com / Admin@1234!');
 
   // Seed songs
   await SongModel.insertMany(seedSongs);

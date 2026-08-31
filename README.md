@@ -56,7 +56,8 @@ cp .env.example .env
 ```bash
 cd backend
 npm run seed
-# Creates: admin@musicflow.com / Admin@1234 + 20 sample songs
+# Creates a development account and 20 sample songs
+# See seed.ts for the default email — use a strong password of your choice
 ```
 
 ### 3 — Run locally
@@ -194,5 +195,6 @@ Key backend variables:
 | `CORS_ORIGIN` | Frontend URL(s) allowed by CORS |
 
 ---
+
 
 

@@ -14,9 +14,19 @@ const passwordResetSchema = new Schema<IPasswordReset>(
       lowercase: true,
       trim: true,
     },
-    otp: {
+    // Store bcrypt hash, never plaintext OTP
+    otpHash: {
       type: String,
       required: true,
+    },
+    // Short-lived token issued after successful OTP verification
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpiresAt: {
+      type: Date,
+      default: null,
     },
     expiresAt: {
       type: Date,
@@ -30,6 +40,11 @@ const passwordResetSchema = new Schema<IPasswordReset>(
       type: Boolean,
       default: false,
     },
+    // Timestamp of most recent OTP request — enforces resend cooldown
+    lastRequestedAt: {
+      type: Date,
+      default: () => new Date(),
+    },
   },
   {
     timestamps: true,
@@ -37,9 +52,10 @@ const passwordResetSchema = new Schema<IPasswordReset>(
   },
 );
 
-// Auto-delete expired documents
+// Auto-delete expired documents via MongoDB TTL index
 passwordResetSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 passwordResetSchema.index({ email: 1, isUsed: 1 });
+passwordResetSchema.index({ resetToken: 1 }, { sparse: true });
 
 export const PasswordResetModel = mongoose.model<IPasswordReset>(
   'PasswordReset',

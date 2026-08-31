@@ -28,7 +28,7 @@ describe('AuthService', () => {
       authRepoMock.findByEmail.mockResolvedValue(user);
       (passwordUtils.comparePassword as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.login({ email: 'test@example.com', password: 'Test@1234' });
+      const result = await service.login({ email: 'test@example.com', password: 'Test@1234!' });
 
       expect(result).toHaveProperty('tokens');
       expect(result).toHaveProperty('user');
@@ -41,7 +41,7 @@ describe('AuthService', () => {
       authRepoMock.findByEmail.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'nobody@example.com', password: 'Test@1234' }),
+        service.login({ email: 'nobody@example.com', password: 'Test@1234!' }),
       ).rejects.toBeInstanceOf(AppError);
     });
 

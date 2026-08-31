@@ -12,10 +12,14 @@ export interface IPasswordReset extends Document {
   _id: Types.ObjectId;
   userId: string;
   email: string;
-  otp: string;
+  otpHash: string;
+  resetToken?: string;
+  resetTokenExpiresAt?: Date;
   expiresAt: Date;
   attempts: number;
   isUsed: boolean;
+  /** When the most recent OTP was requested — used for resend cooldown */
+  lastRequestedAt: Date;
   createdAt: Date;
 }
 
@@ -34,19 +38,13 @@ export interface VerifyOtpDto {
 }
 
 export interface ResetPasswordDto {
-  email: string;
-  otp: string;
+  resetToken: string;       // replaces email+otp — token is single-use
   newPassword: string;
 }
 
 export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;
-}
-
-export interface UpdateEmailDto {
-  newEmail: string;
-  password: string;
 }
 
 export interface AuthTokens {

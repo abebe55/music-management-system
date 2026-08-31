@@ -39,7 +39,12 @@ export function errorHandler(
   // MongoDB duplicate key
   if ((err as NodeJS.ErrnoException).name === 'MongoServerError' &&
       (err as { code?: number }).code === 11000) {
-    sendError(res, 'Duplicate entry', HttpStatus.CONFLICT, 'CONFLICT');
+    const keyValue = (err as { keyValue?: Record<string, unknown> }).keyValue ?? {};
+    const isDuplicate = 'title' in keyValue || 'artist' in keyValue;
+    const message = isDuplicate
+      ? 'A song with this title, artist and album already exists'
+      : 'Duplicate entry';
+    sendError(res, message, HttpStatus.CONFLICT, 'CONFLICT');
     return;
   }
 

@@ -51,7 +51,11 @@ export const SongForm: React.FC<SongFormProps> = ({
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     if (!values.title.trim()) newErrors.title = 'Title is required';
-    if (!values.artist.trim()) newErrors.artist = 'Artist is required';
+    if (!values.artist.trim()) {
+      newErrors.artist = 'Artist is required';
+    } else if (!/[A-Za-z]/.test(values.artist)) {
+      newErrors.artist = 'Artist name must contain at least one letter (e.g. AC/DC, blink-182)';
+    }
     if (!values.album.trim()) newErrors.album = 'Album is required';
     if (!values.genre) newErrors.genre = 'Genre is required';
     setErrors(newErrors);
@@ -96,9 +100,10 @@ export const SongForm: React.FC<SongFormProps> = ({
         value={values.artist}
         onChange={handleChange('artist')}
         error={errors.artist}
-        placeholder="Enter artist name"
+        placeholder="e.g. The Weeknd, AC/DC, blink-182"
         maxLength={150}
         disabled={isLoading}
+        helperText="Must contain at least one letter"
       />
       <Input
         label="Album"
