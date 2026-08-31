@@ -1,8 +1,6 @@
 import Joi from 'joi';
 import { SongConstants } from '../../common/constants/song.constants';
 
-const genreValues = SongConstants.GENRES as unknown as string[];
-
 export const createSongSchema = Joi.object({
   title: Joi.string().trim().max(SongConstants.TITLE_MAX_LENGTH).required()
     .messages({ 'string.empty': 'Title is required' }),
@@ -14,8 +12,14 @@ export const createSongSchema = Joi.object({
     }),
   album: Joi.string().trim().max(SongConstants.ALBUM_MAX_LENGTH).required()
     .messages({ 'string.empty': 'Album is required' }),
-  genre: Joi.string().valid(...genreValues).required()
-    .messages({ 'any.only': 'Please select a valid genre' }),
+  // Accept predefined genres OR any custom text (when user selects "Other")
+  // Must contain at least one letter to prevent numeric-only genre names
+  genre: Joi.string().trim().max(100).required()
+    .pattern(/[A-Za-z]/, 'must contain letters')
+    .messages({
+      'string.empty': 'Genre is required',
+      'string.pattern.name': 'Genre must contain at least one letter',
+    }),
 });
 
 export const updateSongSchema = Joi.object({
@@ -26,7 +30,11 @@ export const updateSongSchema = Joi.object({
       'string.pattern.name': 'Artist name must contain at least one letter',
     }),
   album: Joi.string().trim().max(SongConstants.ALBUM_MAX_LENGTH).optional(),
-  genre: Joi.string().valid(...genreValues).optional(),
+  genre: Joi.string().trim().max(100).optional()
+    .pattern(/[A-Za-z]/, 'must contain letters')
+    .messages({
+      'string.pattern.name': 'Genre must contain at least one letter',
+    }),
 }).min(1);
 
 export const songQuerySchema = Joi.object({

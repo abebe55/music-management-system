@@ -25,10 +25,8 @@ const songSchema = new Schema<ISong>(
     genre: {
       type: String,
       required: [true, 'Genre is required'],
-      enum: {
-        values: SongConstants.GENRES,
-        message: `Genre must be one of: ${SongConstants.GENRES.join(', ')}`,
-      },
+      trim: true,
+      maxlength: [100, 'Genre must be 100 characters or less'],
     },
   },
   {
