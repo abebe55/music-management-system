@@ -1,7 +1,5 @@
-# ================================================================
-# MusicFlow — Full Stack Dev Startup Script (Windows PowerShell)
+
 # Run this from the project root: .\start-dev.ps1
-# ================================================================
 
 $ProjectRoot = $PSScriptRoot
 

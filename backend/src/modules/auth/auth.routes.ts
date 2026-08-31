@@ -72,3 +72,4 @@ router.post('/update-email',
 );
 
 export default router;
+
